@@ -7,18 +7,18 @@ import TestimonialCard from '../components/TestimonialCard';
 const Index = () => {
   const featuredProducts = [
     {
-      id: 'beef-pickles',
-      name: 'Traditional Beef Pickles',
-      price: '$12.99',
-      image: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=400&fit=crop',
-      description: 'Authentic beef pickles made with traditional spices and slow-cooked to perfection.'
+      id: 'chicken-pickle',
+      name: 'Chicken Pickle',
+      price: '$15.99',
+      image: '/lovable-uploads/5d3d1fda-566d-4288-867d-21ed4494e26f.png',
+      description: 'A product of Manipur - Just like homemade chicken pickle with traditional spices and authentic flavors.'
     },
     {
-      id: 'chicken-sinju',
-      name: 'Chicken Sinju',
-      price: '$15.99',
-      image: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=400&fit=crop',
-      description: 'Our signature chicken sinju with aromatic herbs and traditional seasonings.'
+      id: 'seasoned-fermented-fish',
+      name: 'Seasoned Fermented Fish',
+      price: '$18.99',
+      image: '/lovable-uploads/b4742f71-5f91-4c9b-8dfa-88d0e668b696.png',
+      description: 'Ngari Angouba - Traditional seasoned fermented fish, roasted and ready to eat with authentic spices.'
     }
   ];
 
@@ -26,7 +26,7 @@ const Index = () => {
     {
       name: 'Sarah Johnson',
       rating: 5,
-      comment: 'The beef pickles are absolutely amazing! Reminds me of my grandmother\'s cooking.',
+      comment: 'The chicken pickle is absolutely amazing! Reminds me of authentic homemade flavors.',
       location: 'New York, NY'
     },
     {
@@ -38,7 +38,7 @@ const Index = () => {
     {
       name: 'Emma Davis',
       rating: 5,
-      comment: 'The Chicken Sinju is incredible. The flavors are so authentic and delicious.',
+      comment: 'The traditional flavors are incredible. So authentic and delicious.',
       location: 'Chicago, IL'
     }
   ];
@@ -46,13 +46,13 @@ const Index = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-orange-500 to-red-600 text-white">
+      <section className="relative bg-gradient-to-r from-black to-gray-800 text-white">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Authentic Flavors,<br />
-              <span className="text-yellow-300">Traditional Recipes</span>
+              <span className="text-gray-300">Traditional Recipes</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
               Discover the taste of tradition with our handcrafted pickles and specialty foods, 
@@ -61,13 +61,13 @@ const Index = () => {
             <div className="space-x-4">
               <Link
                 to="/shop"
-                className="bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block"
+                className="bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors inline-block"
               >
                 Shop Now
               </Link>
               <Link
                 to="/about"
-                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-orange-600 transition-colors inline-block"
+                className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-black transition-colors inline-block"
               >
                 Our Story
               </Link>
@@ -80,7 +80,7 @@ const Index = () => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
               Our Signature Products
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -95,7 +95,7 @@ const Index = () => {
           <div className="text-center mt-8">
             <Link
               to="/shop"
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors inline-block"
+              className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors inline-block"
             >
               View All Products
             </Link>
@@ -108,7 +108,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-black mb-6">
                 Made with Love, Served with Pride
               </h2>
               <p className="text-lg text-gray-600 mb-6">
@@ -122,7 +122,7 @@ const Index = () => {
               </p>
               <Link
                 to="/about"
-                className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors inline-block"
+                className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors inline-block"
               >
                 Learn More About Us
               </Link>
@@ -131,7 +131,7 @@ const Index = () => {
               <img
                 src="https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=600&h=400&fit=crop"
                 alt="Traditional cooking"
-                className="rounded-lg shadow-lg w-full"
+                className="rounded-lg shadow-lg w-full grayscale"
               />
             </div>
           </div>
@@ -142,7 +142,7 @@ const Index = () => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
               What Our Customers Say
             </h2>
             <p className="text-lg text-gray-600">
@@ -157,7 +157,7 @@ const Index = () => {
           <div className="text-center mt-8">
             <Link
               to="/reviews"
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors inline-block"
+              className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors inline-block"
             >
               Read More Reviews
             </Link>

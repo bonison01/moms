@@ -9,21 +9,27 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center mb-4">
-              <span className="text-2xl font-bold text-orange-500">Momsgoogoo</span>
-              <span className="text-2xl font-bold text-white ml-1">Foods</span>
+              <img 
+                src="/lovable-uploads/ced66691-b3da-4bb5-b26c-c54b76e6ee51.png" 
+                alt="Momsgoogoo Foods" 
+                className="h-8 w-auto mr-3"
+                loading="lazy"
+              />
+              <span className="text-2xl font-bold text-white">Momsgoogoo</span>
+              <span className="text-2xl font-bold text-gray-300 ml-1">Foods</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
               Bringing authentic flavors and traditional recipes to your table. 
               Quality food products made with love and passion.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
                 Facebook
               </a>
-              <a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
                 Instagram
               </a>
-              <a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
                 Twitter
               </a>
             </div>
@@ -33,10 +39,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link to="/about" className="text-gray-300 hover:text-orange-500 transition-colors">About Us</Link></li>
-              <li><Link to="/shop" className="text-gray-300 hover:text-orange-500 transition-colors">Shop</Link></li>
-              <li><Link to="/reviews" className="text-gray-300 hover:text-orange-500 transition-colors">Reviews</Link></li>
-              <li><Link to="/contact" className="text-gray-300 hover:text-orange-500 transition-colors">Contact</Link></li>
+              <li><Link to="/about" className="text-gray-300 hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/shop" className="text-gray-300 hover:text-white transition-colors">Shop</Link></li>
+              <li><Link to="/reviews" className="text-gray-300 hover:text-white transition-colors">Reviews</Link></li>
+              <li><Link to="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
             </ul>
           </div>
 
@@ -44,10 +50,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Support</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">FAQ</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">Shipping Info</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">Returns</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-orange-500 transition-colors">Track Order</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">FAQ</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Shipping Info</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Returns</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Track Order</a></li>
             </ul>
           </div>
         </div>

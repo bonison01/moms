@@ -23,7 +23,13 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-orange-600">Momsgoogoo</span>
+              <img 
+                src="/lovable-uploads/ced66691-b3da-4bb5-b26c-c54b76e6ee51.png" 
+                alt="Momsgoogoo Foods" 
+                className="h-10 w-auto mr-3"
+                loading="lazy"
+              />
+              <span className="text-2xl font-bold text-black">Momsgoogoo</span>
               <span className="text-2xl font-bold text-gray-800 ml-1">Foods</span>
             </Link>
           </div>
@@ -36,14 +42,14 @@ const Navbar = () => {
                 to={item.href}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive(item.href)
-                    ? 'text-orange-600 bg-orange-50'
-                    : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
+                    ? 'text-black bg-gray-100'
+                    : 'text-gray-700 hover:text-black hover:bg-gray-100'
                 }`}
               >
                 {item.name}
               </Link>
             ))}
-            <button className="bg-orange-600 text-white p-2 rounded-full hover:bg-orange-700 transition-colors">
+            <button className="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors">
               <ShoppingCart className="w-5 h-5" />
             </button>
           </div>
@@ -52,7 +58,7 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-orange-600 focus:outline-none"
+              className="text-gray-700 hover:text-black focus:outline-none"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -69,15 +75,15 @@ const Navbar = () => {
                   to={item.href}
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
                     isActive(item.href)
-                      ? 'text-orange-600 bg-orange-50'
-                      : 'text-gray-700 hover:text-orange-600 hover:bg-orange-50'
+                      ? 'text-black bg-gray-100'
+                      : 'text-gray-700 hover:text-black hover:bg-gray-100'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
                 </Link>
               ))}
-              <button className="w-full text-left px-3 py-2 text-gray-700 hover:text-orange-600">
+              <button className="w-full text-left px-3 py-2 text-gray-700 hover:text-black">
                 <ShoppingCart className="w-5 h-5 inline mr-2" />
                 Cart
               </button>

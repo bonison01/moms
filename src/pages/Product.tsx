@@ -9,7 +9,7 @@ const Product = () => {
   const products = {
     'seasoned-fermented-fish': {
       name: 'Seasoned Fermented Fish',
-      price: '$18.99',
+      price: '₹1,599',
       image: '/lovable-uploads/b4742f71-5f91-4c9b-8dfa-88d0e668b696.png',
       description: 'Ngari Angouba - Traditional seasoned fermented fish, roasted and ready to eat with authentic spices. A delicacy from Manipur prepared using traditional methods.',
       ingredients: ['Fermented fish', 'Traditional spice blend', 'Salt', 'Natural seasonings', 'Preservatives'],
@@ -29,7 +29,7 @@ const Product = () => {
     },
     'chicken-pickle': {
       name: 'Chicken Pickle',
-      price: '$15.99',
+      price: '₹1,299',
       image: '/lovable-uploads/5d3d1fda-566d-4288-867d-21ed4494e26f.png',
       description: 'A product of Manipur - Just like homemade chicken pickle with traditional spices and authentic flavors. Made using time-honored family recipes.',
       ingredients: ['Free-range chicken', 'Traditional spices', 'Mustard oil', 'Salt', 'Natural preservatives'],
@@ -49,7 +49,7 @@ const Product = () => {
     },
     'spicy-lentil-crisp': {
       name: 'Spicy Lentil Crisp',
-      price: '$12.99',
+      price: '₹999',
       image: '/lovable-uploads/8dae3250-8a46-444e-8b50-f50cf472cff8.png',
       description: 'Bori Mix - Crunchy spicy lentil crisps perfect as a snack or side dish with traditional meals. Made from premium lentils with authentic spices.',
       ingredients: ['Black gram lentils', 'Spice mix', 'Salt', 'Oil', 'Natural seasonings'],
@@ -69,7 +69,7 @@ const Product = () => {
     },
     'spicy-soybean-crisp': {
       name: 'Spicy Soybean Crisp',
-      price: '$14.99',
+      price: '₹1,199',
       image: '/lovable-uploads/96a97ecf-07a2-4ca9-90c6-5bef5e37e2c2.png',
       description: 'Hawaijar Mix - Crispy spicy soybean mix with authentic traditional flavors and spices. A popular side dish from Manipur.',
       ingredients: ['Fermented soybeans', 'Chili powder', 'Salt', 'Traditional spices', 'Oil'],
@@ -89,7 +89,7 @@ const Product = () => {
     },
     'dry-chilli-chutney': {
       name: 'Dry Chilli Chutney',
-      price: '$11.99',
+      price: '₹899',
       image: '/lovable-uploads/96367fda-747a-4537-947c-446c43ab2308.png',
       description: 'Ametpa Mix with Ngari - Traditional dry chilli chutney with fermented fish, packed with authentic flavors and traditional preparation methods.',
       ingredients: ['Dry chilies', 'Fermented fish', 'Salt', 'Traditional spices', 'Oil'],
@@ -109,7 +109,7 @@ const Product = () => {
     },
     'spicy-stink-beans': {
       name: 'Spicy Stink Beans',
-      price: '$13.99',
+      price: '₹1,099',
       image: '/lovable-uploads/80957d89-ebbe-4a50-93ee-d05b8b7f70b5.png',
       description: 'Yongchak Maru Mix - Traditional spicy stink beans preparation with authentic Manipuri spices. A unique delicacy with distinctive flavors.',
       ingredients: ['Tree beans (Yongchak)', 'Spice blend', 'Salt', 'Oil', 'Traditional seasonings'],
@@ -129,7 +129,7 @@ const Product = () => {
     },
     'bamboo-shoot-chicken-pickle': {
       name: 'Bamboo Shoot Chicken Pickle',
-      price: '$16.99',
+      price: '₹1,399',
       image: '/lovable-uploads/02bd53a8-2cb2-4f88-8765-a8ac21aa2273.png',
       description: 'Premium bamboo shoot chicken pickle combining tender chicken with fresh bamboo shoots in traditional spices. A gourmet preparation from Manipur.',
       ingredients: ['Chicken', 'Fresh bamboo shoots', 'Traditional spices', 'Oil', 'Natural preservatives'],

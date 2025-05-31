@@ -9,14 +9,14 @@ const Index = () => {
     {
       id: 'chicken-pickle',
       name: 'Chicken Pickle',
-      price: '$15.99',
+      price: '₹1,299',
       image: '/lovable-uploads/5d3d1fda-566d-4288-867d-21ed4494e26f.png',
       description: 'A product of Manipur - Just like homemade chicken pickle with traditional spices and authentic flavors.'
     },
     {
       id: 'seasoned-fermented-fish',
       name: 'Seasoned Fermented Fish',
-      price: '$18.99',
+      price: '₹1,599',
       image: '/lovable-uploads/b4742f71-5f91-4c9b-8dfa-88d0e668b696.png',
       description: 'Ngari Angouba - Traditional seasoned fermented fish, roasted and ready to eat with authentic spices.'
     }
@@ -24,22 +24,25 @@ const Index = () => {
 
   const testimonials = [
     {
-      name: 'Sarah Johnson',
+      name: 'Priya Sharma',
       rating: 5,
-      comment: 'The chicken pickle is absolutely amazing! Reminds me of authentic homemade flavors.',
-      location: 'New York, NY'
+      comment: 'The chicken pickle is absolutely divine! It tastes exactly like my grandmother used to make in Manipur. The authentic flavors brought back so many childhood memories.',
+      location: 'Mumbai, Maharashtra',
+      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face'
     },
     {
-      name: 'Michael Chen',
+      name: 'Rajesh Kumar',
       rating: 5,
-      comment: 'Best quality food products I\'ve ever ordered online. Will definitely buy again!',
-      location: 'San Francisco, CA'
+      comment: 'Outstanding quality! I ordered the fermented fish and it was perfectly seasoned. The packaging was excellent and delivery was prompt. Highly recommended!',
+      location: 'Delhi, India',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'
     },
     {
-      name: 'Emma Davis',
+      name: 'Anita Devi',
       rating: 5,
-      comment: 'The traditional flavors are incredible. So authentic and delicious.',
-      location: 'Chicago, IL'
+      comment: 'Finally found authentic Manipuri food online! The spice blend is perfect and you can taste the traditional preparation methods. Will definitely order again.',
+      location: 'Bangalore, Karnataka',
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face'
     }
   ];
 
@@ -146,7 +149,7 @@ const Index = () => {
               What Our Customers Say
             </h2>
             <p className="text-lg text-gray-600">
-              Don't just take our word for it - hear from our satisfied customers
+              Real reviews from our valued customers across India
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

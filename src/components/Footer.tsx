@@ -54,6 +54,7 @@ const Footer = () => {
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Shipping Info</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Returns</a></li>
               <li><a href="#" className="text-gray-300 hover:text-white transition-colors">Track Order</a></li>
+              <li><Link to="/admin/login" className="text-gray-300 hover:text-white transition-colors">Admin Login</Link></li>
             </ul>
           </div>
         </div>

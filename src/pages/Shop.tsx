@@ -1,59 +1,58 @@
 
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string | null;
+  description: string | null;
+  category: string | null;
+  is_active: boolean;
+}
 
 const Shop = () => {
-  const products = [
-    {
-      id: 'seasoned-fermented-fish',
-      name: 'Seasoned Fermented Fish',
-      price: '₹1,599',
-      image: '/lovable-uploads/b4742f71-5f91-4c9b-8dfa-88d0e668b696.png',
-      description: 'Ngari Angouba - Traditional seasoned fermented fish, roasted and ready to eat with authentic spices.'
-    },
-    {
-      id: 'chicken-pickle',
-      name: 'Chicken Pickle',
-      price: '₹1,299',
-      image: '/lovable-uploads/5d3d1fda-566d-4288-867d-21ed4494e26f.png',
-      description: 'A product of Manipur - Just like homemade chicken pickle with traditional spices and authentic flavors.'
-    },
-    {
-      id: 'spicy-lentil-crisp',
-      name: 'Spicy Lentil Crisp',
-      price: '₹999',
-      image: '/lovable-uploads/8dae3250-8a46-444e-8b50-f50cf472cff8.png',
-      description: 'Bori Mix - Crunchy spicy lentil crisps perfect as a snack or side dish with traditional meals.'
-    },
-    {
-      id: 'spicy-soybean-crisp',
-      name: 'Spicy Soybean Crisp',
-      price: '₹1,199',
-      image: '/lovable-uploads/96a97ecf-07a2-4ca9-90c6-5bef5e37e2c2.png',
-      description: 'Hawaijar Mix - Crispy spicy soybean mix with authentic traditional flavors and spices.'
-    },
-    {
-      id: 'dry-chilli-chutney',
-      name: 'Dry Chilli Chutney',
-      price: '₹899',
-      image: '/lovable-uploads/96367fda-747a-4537-947c-446c43ab2308.png',
-      description: 'Ametpa Mix with Ngari - Traditional dry chilli chutney with fermented fish, packed with authentic flavors.'
-    },
-    {
-      id: 'spicy-stink-beans',
-      name: 'Spicy Stink Beans',
-      price: '₹1,099',
-      image: '/lovable-uploads/80957d89-ebbe-4a50-93ee-d05b8b7f70b5.png',
-      description: 'Yongchak Maru Mix - Traditional spicy stink beans preparation with authentic Manipuri spices.'
-    },
-    {
-      id: 'bamboo-shoot-chicken-pickle',
-      name: 'Bamboo Shoot Chicken Pickle',
-      price: '₹1,399',
-      image: '/lovable-uploads/02bd53a8-2cb2-4f88-8765-a8ac21aa2273.png',
-      description: 'Premium bamboo shoot chicken pickle combining tender chicken with fresh bamboo shoots in traditional spices.'
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      console.log('Fetching products for shop page...');
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, image_url, description, category, is_active')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
+      console.log('Products fetched successfully:', data?.length || 0);
+      setProducts(data || []);
+    } catch (error: any) {
+      console.error('Error fetching products:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load products. Please try again later.",
+        variant: "destructive",
+      });
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   return (
     <Layout>
@@ -70,11 +69,32 @@ const Shop = () => {
       {/* Products Grid */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="ml-2 text-gray-600">Loading products...</span>
+            </div>
+          ) : products.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  id={product.id}
+                  name={product.name}
+                  price={`₹${product.price}`}
+                  image={product.image_url || '/placeholder.svg'}
+                  description={product.description || 'No description available'}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">No Products Available</h3>
+              <p className="text-gray-600 mb-8">
+                We're working on adding new products. Please check back soon!
+              </p>
+            </div>
+          )}
           
           {/* Coming Soon */}
           <div className="mt-16 text-center">

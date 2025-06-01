@@ -31,20 +31,28 @@ const AdminDashboard = () => {
 
   const fetchProducts = async () => {
     try {
+      console.log('Fetching products...');
       const { data, error } = await supabase
         .from('products')
         .select('id, name, price, category, stock_quantity, is_active, created_at')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
+      console.log('Products fetched successfully:', data?.length || 0);
       setProducts(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch products",
+        description: error.message || "Failed to fetch products",
         variant: "destructive",
       });
+      // Set empty array on error to prevent infinite loading
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -54,7 +62,7 @@ const AdminDashboard = () => {
     try {
       const { error } = await supabase
         .from('products')
-        .update({ is_active: !currentStatus })
+        .update({ is_active: !currentStatus, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) throw error;
@@ -67,11 +75,11 @@ const AdminDashboard = () => {
         title: "Success",
         description: `Product ${!currentStatus ? 'activated' : 'deactivated'}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating product:', error);
       toast({
         title: "Error",
-        description: "Failed to update product",
+        description: error.message || "Failed to update product",
         variant: "destructive",
       });
     }
@@ -93,11 +101,11 @@ const AdminDashboard = () => {
         title: "Success",
         description: "Product deleted successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting product:', error);
       toast({
         title: "Error",
-        description: "Failed to delete product",
+        description: error.message || "Failed to delete product",
         variant: "destructive",
       });
     }

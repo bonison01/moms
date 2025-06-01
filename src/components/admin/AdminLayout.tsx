@@ -1,5 +1,5 @@
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, isAdmin, loading, signOut } = useAdminAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) {
+      console.log('Redirecting to admin login - user:', !!user, 'isAdmin:', isAdmin);
+      navigate('/admin/login', { replace: true });
+    }
+  }, [user, isAdmin, loading, navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -23,13 +30,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   if (!user || !isAdmin) {
-    navigate('/admin/login');
     return null;
   }
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/admin/login');
+    navigate('/admin/login', { replace: true });
   };
 
   return (

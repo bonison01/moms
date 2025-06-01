@@ -13,18 +13,29 @@ export const useAdminAuth = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if user is admin
-          const { data: adminUser } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          setIsAdmin(!!adminUser);
+          // Check if user is admin with better error handling
+          try {
+            const { data: adminUser, error } = await supabase
+              .from('admin_users')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+            
+            if (error) {
+              console.error('Error checking admin status:', error);
+              setIsAdmin(false);
+            } else {
+              setIsAdmin(!!adminUser);
+            }
+          } catch (error) {
+            console.error('Exception checking admin status:', error);
+            setIsAdmin(false);
+          }
         } else {
           setIsAdmin(false);
         }
@@ -34,17 +45,28 @@ export const useAdminAuth = () => {
 
     // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        const { data: adminUser } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        setIsAdmin(!!adminUser);
+        try {
+          const { data: adminUser, error } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error checking admin status:', error);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(!!adminUser);
+          }
+        } catch (error) {
+          console.error('Exception checking admin status:', error);
+          setIsAdmin(false);
+        }
       }
       setLoading(false);
     });
@@ -60,6 +82,27 @@ export const useAdminAuth = () => {
     return { error };
   };
 
+  const signUp = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (!error && data.user) {
+      // Create admin user record
+      const { error: adminError } = await supabase
+        .from('admin_users')
+        .insert([{ user_id: data.user.id, role: 'admin' }]);
+      
+      if (adminError) {
+        console.error('Error creating admin user:', adminError);
+        return { error: adminError };
+      }
+    }
+
+    return { error };
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     return { error };
@@ -71,6 +114,7 @@ export const useAdminAuth = () => {
     isAdmin,
     loading,
     signIn,
+    signUp,
     signOut,
   };
 };

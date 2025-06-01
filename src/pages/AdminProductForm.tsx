@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,19 +55,31 @@ const AdminProductForm = () => {
 
       if (error) throw error;
       
+      // Handle nutrition_facts type conversion
+      const nutritionFacts = data.nutrition_facts && typeof data.nutrition_facts === 'object' 
+        ? {
+            calories: (data.nutrition_facts as any).calories || '',
+            protein: (data.nutrition_facts as any).protein || '',
+            carbs: (data.nutrition_facts as any).carbs || '',
+            fat: (data.nutrition_facts as any).fat || '',
+            fiber: (data.nutrition_facts as any).fiber || '',
+            sodium: (data.nutrition_facts as any).sodium || ''
+          }
+        : {
+            calories: '',
+            protein: '',
+            carbs: '',
+            fat: '',
+            fiber: '',
+            sodium: ''
+          };
+      
       setFormData({
         ...data,
         price: data.price.toString(),
         stock_quantity: data.stock_quantity.toString(),
         features: data.features || [''],
-        nutrition_facts: data.nutrition_facts || {
-          calories: '',
-          protein: '',
-          carbs: '',
-          fat: '',
-          fiber: '',
-          sodium: ''
-        }
+        nutrition_facts: nutritionFacts
       });
     } catch (error) {
       console.error('Error fetching product:', error);

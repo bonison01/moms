@@ -10,68 +10,102 @@ export const useAdminAuth = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // Check for existing session first
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
+
+        console.log('Initial session check:', session?.user?.id);
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            await checkAdminStatus(session.user.id);
+          } else {
+            setIsAdmin(false);
+            setLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Exception getting initial session:', error);
+        if (mounted) {
+          setIsAdmin(false);
+          setLoading(false);
+        }
+      }
+    };
+
+    // Check admin status
+    const checkAdminStatus = async (userId: string) => {
+      try {
+        console.log('Checking admin status for user:', userId);
+        const { data: adminUser, error } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Error checking admin status:', error);
+          if (mounted) {
+            setIsAdmin(false);
+            setLoading(false);
+          }
+          return;
+        }
+
+        console.log('Admin check result:', !!adminUser);
+        if (mounted) {
+          setIsAdmin(!!adminUser);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Exception checking admin status:', error);
+        if (mounted) {
+          setIsAdmin(false);
+          setLoading(false);
+        }
+      }
+    };
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
+        
+        if (!mounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if user is admin with better error handling
-          try {
-            const { data: adminUser, error } = await supabase
-              .from('admin_users')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-            
-            if (error) {
-              console.error('Error checking admin status:', error);
-              setIsAdmin(false);
-            } else {
-              setIsAdmin(!!adminUser);
-            }
-          } catch (error) {
-            console.error('Exception checking admin status:', error);
-            setIsAdmin(false);
-          }
+          await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        try {
-          const { data: adminUser, error } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          
-          if (error) {
-            console.error('Error checking admin status:', error);
-            setIsAdmin(false);
-          } else {
-            setIsAdmin(!!adminUser);
-          }
-        } catch (error) {
-          console.error('Exception checking admin status:', error);
-          setIsAdmin(false);
-        }
-      }
-      setLoading(false);
-    });
+    // Get initial session
+    getInitialSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

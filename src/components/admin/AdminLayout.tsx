@@ -14,23 +14,36 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { user, isAdmin, loading, signOut } = useAdminAuth();
   const navigate = useNavigate();
 
+  console.log('AdminLayout render - loading:', loading, 'user:', !!user, 'isAdmin:', isAdmin);
+
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      console.log('Redirecting to admin login - user:', !!user, 'isAdmin:', isAdmin);
-      navigate('/admin/login', { replace: true });
+    if (!loading) {
+      if (!user || !isAdmin) {
+        console.log('Redirecting to admin login - user:', !!user, 'isAdmin:', isAdmin);
+        navigate('/admin/login', { replace: true });
+      }
     }
   }, [user, isAdmin, loading, navigate]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (!user || !isAdmin) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleSignOut = async () => {

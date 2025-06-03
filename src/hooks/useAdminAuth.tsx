@@ -8,25 +8,25 @@ export const useAdminAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [initialized, setInitialized] = useState<boolean>(false);
 
   useEffect(() => {
     let mounted = true;
 
-    // Check for existing session first
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       try {
+        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting session:', error);
           if (mounted) {
             setLoading(false);
+            setInitialized(true);
           }
           return;
         }
 
-        console.log('Initial session check:', session?.user?.id);
-        
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
@@ -35,22 +35,22 @@ export const useAdminAuth = () => {
             await checkAdminStatus(session.user.id);
           } else {
             setIsAdmin(false);
-            setLoading(false);
           }
+          setLoading(false);
+          setInitialized(true);
         }
       } catch (error) {
-        console.error('Exception getting initial session:', error);
+        console.error('Error initializing auth:', error);
         if (mounted) {
           setIsAdmin(false);
           setLoading(false);
+          setInitialized(true);
         }
       }
     };
 
-    // Check admin status using the new function
     const checkAdminStatus = async (userId: string) => {
       try {
-        console.log('Checking admin status for user:', userId);
         const { data, error } = await supabase.rpc('check_user_is_admin', {
           check_user_id: userId
         });
@@ -59,21 +59,17 @@ export const useAdminAuth = () => {
           console.error('Error checking admin status:', error);
           if (mounted) {
             setIsAdmin(false);
-            setLoading(false);
           }
           return;
         }
 
-        console.log('Admin check result:', data);
         if (mounted) {
           setIsAdmin(!!data);
-          setLoading(false);
         }
       } catch (error) {
-        console.error('Exception checking admin status:', error);
+        console.error('Error checking admin status:', error);
         if (mounted) {
           setIsAdmin(false);
-          setLoading(false);
         }
       }
     };
@@ -81,24 +77,27 @@ export const useAdminAuth = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        
         if (!mounted) return;
 
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkAdminStatus(session.user.id);
+          setTimeout(() => {
+            checkAdminStatus(session.user.id);
+          }, 0);
         } else {
           setIsAdmin(false);
+        }
+        
+        if (initialized) {
           setLoading(false);
         }
       }
     );
 
-    // Get initial session
-    getInitialSession();
+    // Initialize auth
+    initializeAuth();
 
     return () => {
       mounted = false;
@@ -107,17 +106,27 @@ export const useAdminAuth = () => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    if (!error) {
+      // Auth state change will handle the rest
+    } else {
+      setLoading(false);
+    }
     return { error };
   };
 
   const signUp = async (email: string, password: string) => {
+    setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/admin`
+      }
     });
 
     if (!error && data.user) {
@@ -128,15 +137,24 @@ export const useAdminAuth = () => {
       
       if (adminError) {
         console.error('Error creating admin user:', adminError);
+        setLoading(false);
         return { error: adminError };
       }
     }
 
+    if (error) {
+      setLoading(false);
+    }
     return { error };
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+    if (!error) {
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+    }
     return { error };
   };
 
@@ -144,7 +162,7 @@ export const useAdminAuth = () => {
     user,
     session,
     isAdmin,
-    loading,
+    loading: loading || !initialized,
     signIn,
     signUp,
     signOut,

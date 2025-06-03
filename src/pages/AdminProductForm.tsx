@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, Loader2, Save } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 const AdminProductForm = () => {
   const { id } = useParams();
@@ -18,6 +20,7 @@ const AdminProductForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEditing);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -46,6 +49,7 @@ const AdminProductForm = () => {
   }, [id, isEditing]);
 
   const fetchProduct = async () => {
+    setInitialLoading(true);
     try {
       const { data, error } = await supabase
         .from('products')
@@ -53,9 +57,17 @@ const AdminProductForm = () => {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching product:', error);
+        toast({
+          title: "Error",
+          description: "Product not found",
+          variant: "destructive",
+        });
+        navigate('/admin');
+        return;
+      }
       
-      // Handle nutrition_facts type conversion
       const nutritionFacts = data.nutrition_facts && typeof data.nutrition_facts === 'object' 
         ? {
             calories: (data.nutrition_facts as any).calories || '',
@@ -78,7 +90,7 @@ const AdminProductForm = () => {
         ...data,
         price: data.price.toString(),
         stock_quantity: data.stock_quantity.toString(),
-        features: data.features || [''],
+        features: data.features && data.features.length > 0 ? data.features : [''],
         nutrition_facts: nutritionFacts
       });
     } catch (error) {
@@ -88,6 +100,9 @@ const AdminProductForm = () => {
         description: "Failed to fetch product",
         variant: "destructive",
       });
+      navigate('/admin');
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -143,7 +158,7 @@ const AdminProductForm = () => {
 
   const removeFeature = (index: number) => {
     const newFeatures = formData.features.filter((_, i) => i !== index);
-    setFormData({ ...formData, features: newFeatures });
+    setFormData({ ...formData, features: newFeatures.length > 0 ? newFeatures : [''] });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,16 +166,27 @@ const AdminProductForm = () => {
     setLoading(true);
 
     try {
+      // Validation
+      if (!formData.name.trim()) {
+        throw new Error('Product name is required');
+      }
+      if (!formData.price || parseFloat(formData.price) <= 0) {
+        throw new Error('Valid price is required');
+      }
+      if (!formData.stock_quantity || parseInt(formData.stock_quantity) < 0) {
+        throw new Error('Valid stock quantity is required');
+      }
+
       const productData = {
-        name: formData.name,
+        name: formData.name.trim(),
         price: parseFloat(formData.price),
-        description: formData.description,
-        category: formData.category,
-        ingredients: formData.ingredients,
-        offers: formData.offers,
+        description: formData.description.trim() || null,
+        category: formData.category.trim() || null,
+        ingredients: formData.ingredients.trim() || null,
+        offers: formData.offers.trim() || null,
         stock_quantity: parseInt(formData.stock_quantity),
         is_active: formData.is_active,
-        image_url: formData.image_url,
+        image_url: formData.image_url || null,
         features: formData.features.filter(f => f.trim() !== ''),
         nutrition_facts: formData.nutrition_facts,
         updated_at: new Date().toISOString()
@@ -190,17 +216,30 @@ const AdminProductForm = () => {
       }
 
       navigate('/admin');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error);
       toast({
         title: "Error",
-        description: "Failed to save product",
+        description: error.message || "Failed to save product",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center py-20">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
+            <p className="text-gray-600 text-lg">Loading product...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -211,9 +250,14 @@ const AdminProductForm = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Products
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {isEditing ? 'Edit Product' : 'Add New Product'}
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isEditing ? 'Edit Product' : 'Add New Product'}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {isEditing ? 'Update product information' : 'Create a new product for your catalog'}
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -226,23 +270,26 @@ const AdminProductForm = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Product Name</Label>
+                  <Label htmlFor="name">Product Name *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    placeholder="Enter product name"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="price">Price (₹)</Label>
+                  <Label htmlFor="price">Price (₹) *</Label>
                   <Input
                     id="price"
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     required
+                    placeholder="0.00"
                   />
                 </div>
                 <div>
@@ -251,17 +298,28 @@ const AdminProductForm = () => {
                     id="category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g., Snacks, Beverages"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="stock">Stock Quantity</Label>
+                  <Label htmlFor="stock">Stock Quantity *</Label>
                   <Input
                     id="stock"
                     type="number"
+                    min="0"
                     value={formData.stock_quantity}
                     onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                     required
+                    placeholder="0"
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                  <Label htmlFor="is_active">Product is active</Label>
                 </div>
               </CardContent>
             </Card>
@@ -270,7 +328,7 @@ const AdminProductForm = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Product Image</CardTitle>
-                <CardDescription>Upload a product image</CardDescription>
+                <CardDescription>Upload a high-quality product image</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -282,14 +340,19 @@ const AdminProductForm = () => {
                     onChange={handleImageUpload}
                     disabled={uploading}
                   />
-                  {uploading && <p className="text-sm text-gray-500">Uploading...</p>}
+                  {uploading && (
+                    <div className="flex items-center mt-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <p className="text-sm text-gray-500">Uploading...</p>
+                    </div>
+                  )}
                 </div>
                 {formData.image_url && (
                   <div className="mt-4">
                     <img
                       src={formData.image_url}
                       alt="Product preview"
-                      className="w-full h-48 object-cover rounded-lg"
+                      className="w-full h-48 object-cover rounded-lg border"
                     />
                   </div>
                 )}
@@ -301,7 +364,7 @@ const AdminProductForm = () => {
           <Card>
             <CardHeader>
               <CardTitle>Product Details</CardTitle>
-              <CardDescription>Detailed product information</CardDescription>
+              <CardDescription>Detailed product information for customers</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -311,6 +374,7 @@ const AdminProductForm = () => {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
+                  placeholder="Describe your product..."
                 />
               </div>
               <div>
@@ -320,6 +384,7 @@ const AdminProductForm = () => {
                   value={formData.ingredients}
                   onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
                   rows={3}
+                  placeholder="List the ingredients..."
                 />
               </div>
               <div>
@@ -329,6 +394,7 @@ const AdminProductForm = () => {
                   value={formData.offers}
                   onChange={(e) => setFormData({ ...formData, offers: e.target.value })}
                   rows={2}
+                  placeholder="Any special offers or promotions..."
                 />
               </div>
             </CardContent>
@@ -338,7 +404,7 @@ const AdminProductForm = () => {
           <Card>
             <CardHeader>
               <CardTitle>Product Features</CardTitle>
-              <CardDescription>Add key features of the product</CardDescription>
+              <CardDescription>Add key features and benefits</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {formData.features.map((feature, index) => (
@@ -382,6 +448,7 @@ const AdminProductForm = () => {
                       ...formData,
                       nutrition_facts: { ...formData.nutrition_facts, calories: e.target.value }
                     })}
+                    placeholder="0"
                   />
                 </div>
                 <div>
@@ -393,6 +460,7 @@ const AdminProductForm = () => {
                       ...formData,
                       nutrition_facts: { ...formData.nutrition_facts, protein: e.target.value }
                     })}
+                    placeholder="0"
                   />
                 </div>
                 <div>
@@ -404,6 +472,7 @@ const AdminProductForm = () => {
                       ...formData,
                       nutrition_facts: { ...formData.nutrition_facts, carbs: e.target.value }
                     })}
+                    placeholder="0"
                   />
                 </div>
                 <div>
@@ -415,6 +484,7 @@ const AdminProductForm = () => {
                       ...formData,
                       nutrition_facts: { ...formData.nutrition_facts, fat: e.target.value }
                     })}
+                    placeholder="0"
                   />
                 </div>
                 <div>
@@ -426,6 +496,7 @@ const AdminProductForm = () => {
                       ...formData,
                       nutrition_facts: { ...formData.nutrition_facts, fiber: e.target.value }
                     })}
+                    placeholder="0"
                   />
                 </div>
                 <div>
@@ -437,6 +508,7 @@ const AdminProductForm = () => {
                       ...formData,
                       nutrition_facts: { ...formData.nutrition_facts, sodium: e.target.value }
                     })}
+                    placeholder="0"
                   />
                 </div>
               </div>
@@ -444,11 +516,13 @@ const AdminProductForm = () => {
           </Card>
 
           {/* Submit Buttons */}
-          <div className="flex space-x-4">
-            <Button type="submit" disabled={loading}>
+          <div className="flex space-x-4 pt-6">
+            <Button type="submit" disabled={loading} size="lg">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Save className="mr-2 h-4 w-4" />
               {loading ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
             </Button>
-            <Button type="button" variant="outline" onClick={() => navigate('/admin')}>
+            <Button type="button" variant="outline" onClick={() => navigate('/admin')} size="lg">
               Cancel
             </Button>
           </div>

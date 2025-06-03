@@ -12,15 +12,44 @@ export const useAdminAuth = () => {
   useEffect(() => {
     let mounted = true;
 
+    // Simple function to check if user is admin by directly querying admin_users table
+    const checkAdminStatus = async (userId: string) => {
+      try {
+        // Direct query to admin_users table without using the RPC function
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
+        
+        if (!mounted) return;
+
+        if (error) {
+          console.error('Error checking admin status:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(data && data.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        if (mounted) {
+          setIsAdmin(false);
+        }
+      }
+    };
+
     const initializeAuth = async () => {
       try {
-        // Get initial session quickly
+        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
 
         if (error) {
           console.error('Error getting session:', error);
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
           setLoading(false);
           return;
         }
@@ -29,39 +58,17 @@ export const useAdminAuth = () => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check admin status in parallel
-          checkAdminStatus(session.user.id);
+          await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
-          setLoading(false);
         }
+        
+        setLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
-          setIsAdmin(false);
-          setLoading(false);
-        }
-      }
-    };
-
-    const checkAdminStatus = async (userId: string) => {
-      try {
-        const { data, error } = await supabase.rpc('check_user_is_admin', {
-          check_user_id: userId
-        });
-        
-        if (!mounted) return;
-
-        if (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
-        } else {
-          setIsAdmin(!!data);
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-        if (mounted) {
+          setSession(null);
+          setUser(null);
           setIsAdmin(false);
           setLoading(false);
         }
@@ -70,7 +77,7 @@ export const useAdminAuth = () => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!mounted) return;
 
         console.log('Auth state change:', event, session?.user?.email);
@@ -79,15 +86,18 @@ export const useAdminAuth = () => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          checkAdminStatus(session.user.id);
+          await checkAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
+        }
+        
+        if (event === 'SIGNED_OUT') {
           setLoading(false);
         }
       }
     );
 
-    // Initialize auth immediately
+    // Initialize auth
     initializeAuth();
 
     return () => {
@@ -106,7 +116,6 @@ export const useAdminAuth = () => {
     if (error) {
       setLoading(false);
     }
-    // Don't set loading to false on success - auth state change will handle it
     return { error };
   };
 
@@ -121,7 +130,7 @@ export const useAdminAuth = () => {
     });
 
     if (!error && data.user) {
-      // Create admin user record
+      // Create admin user record directly
       const { error: adminError } = await supabase
         .from('admin_users')
         .insert([{ user_id: data.user.id, role: 'admin' }]);
@@ -140,12 +149,12 @@ export const useAdminAuth = () => {
   };
 
   const signOut = async () => {
+    setLoading(true);
     const { error } = await supabase.auth.signOut();
-    if (!error) {
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-    }
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
+    setLoading(false);
     return { error };
   };
 

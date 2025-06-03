@@ -15,22 +15,25 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Only redirect if we're sure about the auth state (not loading)
     if (!loading && (!user || !isAdmin)) {
       navigate('/admin/login', { replace: true });
     }
   }, [user, isAdmin, loading, navigate]);
 
+  // Show loading only briefly while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600 text-lg">Loading admin dashboard...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+          <p className="text-gray-600 text-sm">Loading...</p>
         </div>
       </div>
     );
   }
 
+  // Show access denied immediately if not authorized
   if (!user || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

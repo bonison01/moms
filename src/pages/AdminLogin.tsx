@@ -15,24 +15,25 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const { signIn, signUp, isAdmin, user, loading: authLoading } = useAdminAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Only redirect if we're not loading and user is authenticated as admin
     if (!authLoading && user && isAdmin) {
       navigate('/admin', { replace: true });
     }
   }, [isAdmin, user, authLoading, navigate]);
 
-  // Show loading while checking auth status
+  // Show minimal loading only when actually checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Checking authentication...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+          <p className="text-gray-600 text-sm">Checking authentication...</p>
         </div>
       </div>
     );
@@ -40,12 +41,12 @@ const AdminLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setActionLoading(true);
     setError('');
 
     if (!email || !password) {
       setError('Please fill in all fields');
-      setLoading(false);
+      setActionLoading(false);
       return;
     }
 
@@ -53,32 +54,32 @@ const AdminLogin = () => {
     
     if (error) {
       setError(error.message);
-      setLoading(false);
+      setActionLoading(false);
     }
-    // Don't set loading to false here if successful - auth state change will handle navigation
+    // Auth state change will handle navigation and stop loading
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setActionLoading(true);
     setError('');
     setSuccess('');
 
     if (!email || !password || !confirmPassword) {
       setError('Please fill in all fields');
-      setLoading(false);
+      setActionLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-      setLoading(false);
+      setActionLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters long');
-      setLoading(false);
+      setActionLoading(false);
       return;
     }
 
@@ -86,15 +87,16 @@ const AdminLogin = () => {
     
     if (error) {
       setError(error.message);
-      setLoading(false);
     } else {
       setSuccess('Admin account created successfully! Please check your email to verify your account.');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-      setLoading(false);
     }
+    setActionLoading(false);
   };
+
+  const isLoading = actionLoading;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
@@ -126,7 +128,7 @@ const AdminLogin = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="admin@example.com"
-                    disabled={loading}
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -138,7 +140,7 @@ const AdminLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    disabled={loading}
+                    disabled={isLoading}
                   />
                 </div>
                 {error && (
@@ -146,9 +148,9 @@ const AdminLogin = () => {
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {loading ? 'Signing In...' : 'Sign In'}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading ? 'Signing In...' : 'Sign In'}
                 </Button>
               </form>
             </TabsContent>
@@ -164,7 +166,7 @@ const AdminLogin = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="admin@example.com"
-                    disabled={loading}
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -176,7 +178,7 @@ const AdminLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    disabled={loading}
+                    disabled={isLoading}
                     minLength={6}
                   />
                 </div>
@@ -189,7 +191,7 @@ const AdminLogin = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     placeholder="••••••••"
-                    disabled={loading}
+                    disabled={isLoading}
                     minLength={6}
                   />
                 </div>
@@ -203,9 +205,9 @@ const AdminLogin = () => {
                     <AlertDescription>{success}</AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {loading ? 'Creating Account...' : 'Create Admin Account'}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading ? 'Creating Account...' : 'Create Admin Account'}
                 </Button>
               </form>
             </TabsContent>

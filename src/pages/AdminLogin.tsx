@@ -21,15 +21,23 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect if already authenticated as admin
+    // Redirect if already authenticated as admin and not loading
     if (!authLoading && user && isAdmin) {
+      console.log('Redirecting to admin dashboard');
       navigate('/admin', { replace: true });
     }
   }, [isAdmin, user, authLoading, navigate]);
 
-  // Don't show loading screen, just render the form
-  if (!authLoading && user && isAdmin) {
-    return null; // Will redirect
+  // Show loading if auth is still loading or if already authenticated
+  if (authLoading || (user && isAdmin)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-600 text-sm">Checking authentication...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -49,6 +57,7 @@ const AdminLogin = () => {
       setError(error.message);
       setActionLoading(false);
     }
+    // Don't set actionLoading to false on success - the redirect will handle it
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -79,13 +88,14 @@ const AdminLogin = () => {
     
     if (error) {
       setError(error.message);
+      setActionLoading(false);
     } else {
       setSuccess('Admin account created successfully! Please check your email to verify your account.');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
+      setActionLoading(false);
     }
-    setActionLoading(false);
   };
 
   return (

@@ -12,23 +12,21 @@ export const useAdminAuth = () => {
   useEffect(() => {
     let mounted = true;
 
-    // Simple function to check if user is admin by directly querying admin_users table
     const checkAdminStatus = async (userId: string) => {
       try {
-        // Direct query to admin_users table without using the RPC function
         const { data, error } = await supabase
           .from('admin_users')
           .select('id')
           .eq('user_id', userId)
-          .limit(1);
+          .single();
         
         if (!mounted) return;
 
-        if (error) {
+        if (error && error.code !== 'PGRST116') {
           console.error('Error checking admin status:', error);
           setIsAdmin(false);
         } else {
-          setIsAdmin(data && data.length > 0);
+          setIsAdmin(!!data);
         }
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -40,7 +38,6 @@ export const useAdminAuth = () => {
 
     const initializeAuth = async () => {
       try {
-        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
@@ -75,7 +72,6 @@ export const useAdminAuth = () => {
       }
     };
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -91,13 +87,13 @@ export const useAdminAuth = () => {
           setIsAdmin(false);
         }
         
-        if (event === 'SIGNED_OUT') {
+        // Only set loading to false after auth state changes
+        if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') {
           setLoading(false);
         }
       }
     );
 
-    // Initialize auth
     initializeAuth();
 
     return () => {
@@ -113,9 +109,7 @@ export const useAdminAuth = () => {
       password,
     });
     
-    if (error) {
-      setLoading(false);
-    }
+    // Don't set loading to false here - let the auth state change handle it
     return { error };
   };
 
@@ -130,7 +124,6 @@ export const useAdminAuth = () => {
     });
 
     if (!error && data.user) {
-      // Create admin user record directly
       const { error: adminError } = await supabase
         .from('admin_users')
         .insert([{ user_id: data.user.id, role: 'admin' }]);
@@ -142,14 +135,11 @@ export const useAdminAuth = () => {
       }
     }
 
-    if (error) {
-      setLoading(false);
-    }
+    // Don't set loading to false here - let the auth state change handle it
     return { error };
   };
 
   const signOut = async () => {
-    setLoading(true);
     const { error } = await supabase.auth.signOut();
     setUser(null);
     setSession(null);

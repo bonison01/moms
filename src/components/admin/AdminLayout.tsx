@@ -16,11 +16,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   useEffect(() => {
     // Only redirect if not loading and user is not admin
     if (!loading && (!user || !isAdmin)) {
+      console.log('Redirecting to admin login - not authenticated or not admin');
       navigate('/admin/login', { replace: true });
     }
   }, [user, isAdmin, loading, navigate]);
 
-  // Show loading briefly
+  // Show loading while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -32,7 +33,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     );
   }
 
-  // Redirect if not authorized
+  // Don't render anything if not authorized (will redirect)
   if (!user || !isAdmin) {
     return null;
   }

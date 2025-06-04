@@ -13,6 +13,7 @@ import Contact from "./pages/Contact";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminProductForm from "./pages/AdminProductForm";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/products/new" element={<AdminProductForm />} />
           <Route path="/admin/products/:id/edit" element={<AdminProductForm />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

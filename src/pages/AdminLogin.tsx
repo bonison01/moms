@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,27 +9,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Shield } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [success, setSuccess] = useState('');
-  const { signIn, signUp, isAdmin, user, loading: authLoading } = useAdminAuth();
+  const [activeTab, setActiveTab] = useState('login');
+  
+  const { signIn, signUp, isAdmin, user, profile, loading: authLoading, profileLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Redirect if already authenticated as admin and not loading
-    if (!authLoading && user && isAdmin) {
-      console.log('Redirecting to admin dashboard');
+    // Redirect if already authenticated as admin
+    if (!authLoading && !profileLoading && user && profile && isAdmin) {
+      console.log('Already authenticated as admin - redirecting to dashboard');
       navigate('/admin', { replace: true });
     }
-  }, [isAdmin, user, authLoading, navigate]);
+  }, [isAdmin, user, profile, authLoading, profileLoading, navigate]);
 
-  // Show loading if auth is still loading or if already authenticated
-  if (authLoading || (user && isAdmin)) {
+  // Show loading if auth is still loading or if already authenticated as admin
+  if (authLoading || profileLoading || (user && profile && isAdmin)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
@@ -39,6 +43,14 @@ const AdminLogin = () => {
       </div>
     );
   }
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setFullName('');
+    setConfirmPassword('');
+    setError('');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,22 +63,31 @@ const AdminLogin = () => {
       return;
     }
 
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      setError(error.message);
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        setError(error.message);
+        setActionLoading(false);
+      } else {
+        toast({
+          title: "Success",
+          description: "Signed in successfully! Redirecting to admin dashboard...",
+        });
+        // Auth state change will handle redirect
+      }
+    } catch (error: any) {
+      setError('An unexpected error occurred');
       setActionLoading(false);
     }
-    // Don't set actionLoading to false on success - the redirect will handle it
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setActionLoading(true);
     setError('');
-    setSuccess('');
 
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !fullName) {
       setError('Please fill in all fields');
       setActionLoading(false);
       return;
@@ -84,16 +105,30 @@ const AdminLogin = () => {
       return;
     }
 
-    const { error } = await signUp(email, password);
-    
-    if (error) {
-      setError(error.message);
-      setActionLoading(false);
-    } else {
-      setSuccess('Admin account created successfully! Please check your email to verify your account.');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
+    try {
+      const { data, error } = await signUp(email, password, fullName);
+      
+      if (error) {
+        setError(error.message);
+        setActionLoading(false);
+      } else if (data.user && !data.session) {
+        // Email confirmation required
+        toast({
+          title: "Check your email",
+          description: "Please check your email for a confirmation link to complete your account setup.",
+        });
+        resetForm();
+        setActiveTab('login');
+        setActionLoading(false);
+      } else {
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully!",
+        });
+        // Auth state change will handle redirect
+      }
+    } catch (error: any) {
+      setError('An unexpected error occurred');
       setActionLoading(false);
     }
   };
@@ -111,9 +146,9 @@ const AdminLogin = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Create Account</TabsTrigger>
             </TabsList>
             
@@ -158,6 +193,18 @@ const AdminLogin = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Input
+                    id="signup-name"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    placeholder="Your full name"
+                    disabled={actionLoading}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
                     id="signup-email"
@@ -200,14 +247,9 @@ const AdminLogin = () => {
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
-                {success && (
-                  <Alert>
-                    <AlertDescription>{success}</AlertDescription>
-                  </Alert>
-                )}
                 <Button type="submit" className="w-full" disabled={actionLoading}>
                   {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {actionLoading ? 'Creating Account...' : 'Create Admin Account'}
+                  {actionLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
               </form>
             </TabsContent>

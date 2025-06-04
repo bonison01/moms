@@ -9,27 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          id: string
-          role: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       products: {
         Row: {
           category: string | null
@@ -81,6 +60,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -90,9 +96,17 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: boolean
       }
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "paying_user" | "free_user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -207,6 +221,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "paying_user", "free_user"],
+    },
   },
 } as const

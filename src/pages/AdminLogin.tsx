@@ -25,15 +25,28 @@ const AdminLogin = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Redirect if already authenticated as admin
-    if (!authLoading && !profileLoading && user && profile && isAdmin) {
-      console.log('Already authenticated as admin - redirecting to dashboard');
-      navigate('/admin', { replace: true });
+    // Only redirect if we have complete auth data and user is admin
+    if (!authLoading && !profileLoading && user && profile) {
+      console.log('AdminLogin auth check:', {
+        user: !!user,
+        profile: !!profile,
+        isAdmin,
+        userEmail: user.email,
+        profileRole: profile.role
+      });
+
+      if (isAdmin) {
+        console.log('Already authenticated as admin - redirecting to dashboard');
+        navigate('/admin', { replace: true });
+      } else {
+        console.log('User is not admin - staying on login page');
+        setError('Access denied. Admin privileges required.');
+      }
     }
   }, [isAdmin, user, profile, authLoading, profileLoading, navigate]);
 
-  // Show loading if auth is still loading or if already authenticated as admin
-  if (authLoading || profileLoading || (user && profile && isAdmin)) {
+  // Show loading if auth is still loading
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
@@ -64,19 +77,23 @@ const AdminLogin = () => {
     }
 
     try {
-      const { error } = await signIn(email, password);
+      console.log('Attempting login for:', email);
+      const { data, error } = await signIn(email, password);
       
       if (error) {
+        console.error('Login error:', error);
         setError(error.message);
         setActionLoading(false);
-      } else {
+      } else if (data.user) {
+        console.log('Login successful for:', data.user.email);
         toast({
-          title: "Success",
-          description: "Signed in successfully! Redirecting to admin dashboard...",
+          title: "Login successful",
+          description: "Redirecting to admin dashboard...",
         });
-        // Auth state change will handle redirect
+        // Don't redirect here - let the useEffect handle it after profile loads
       }
     } catch (error: any) {
+      console.error('Login exception:', error);
       setError('An unexpected error occurred');
       setActionLoading(false);
     }

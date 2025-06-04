@@ -24,6 +24,8 @@ export const useAuth = () => {
   const fetchProfile = async (userId: string) => {
     try {
       setProfileLoading(true);
+      console.log('Fetching profile for user:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -34,6 +36,7 @@ export const useAuth = () => {
         console.error('Error fetching profile:', error);
         setProfile(null);
       } else {
+        console.log('Profile fetched successfully:', data);
         setProfile(data);
       }
     } catch (error) {
@@ -46,6 +49,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     let mounted = true;
+    console.log('Setting up auth state listener');
 
     // Set up auth state listener - CRITICAL: Keep this synchronous
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -62,7 +66,9 @@ export const useAuth = () => {
         if (session?.user) {
           // Use setTimeout to defer async operations - prevents deadlocks
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            if (mounted) {
+              fetchProfile(session.user.id);
+            }
           }, 0);
         } else {
           setProfile(null);
@@ -76,6 +82,7 @@ export const useAuth = () => {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('Getting initial session');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
@@ -86,6 +93,7 @@ export const useAuth = () => {
           return;
         }
 
+        console.log('Initial session:', session?.user?.email || 'No session');
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -111,20 +119,27 @@ export const useAuth = () => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting to sign in:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      return { error };
+      
+      if (error) {
+        console.error('Sign in error:', error);
+      } else {
+        console.log('Sign in successful:', data.user?.email);
+      }
+      
+      return { data, error };
     } catch (error: any) {
-      return { error };
+      console.error('Sign in exception:', error);
+      return { data: null, error };
     }
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -144,6 +159,7 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
+      console.log('Signing out');
       const { error } = await supabase.auth.signOut();
       
       // Clear state immediately
@@ -162,6 +178,16 @@ export const useAuth = () => {
   const isAdmin = profile?.role === 'admin';
   const isPaying = profile?.role === 'paying_user';
   const isFree = profile?.role === 'free_user';
+
+  console.log('Auth state:', {
+    user: !!user,
+    profile: !!profile,
+    loading,
+    profileLoading,
+    isAdmin,
+    userEmail: user?.email,
+    profileRole: profile?.role
+  });
 
   return {
     user,

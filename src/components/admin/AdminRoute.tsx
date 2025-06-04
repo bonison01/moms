@@ -12,8 +12,16 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only redirect when we have complete auth information
+    // Only redirect when we have complete auth information and are not loading
     if (!loading && !profileLoading) {
+      console.log('AdminRoute auth check:', {
+        user: !!user,
+        profile: !!profile,
+        isAdmin,
+        loading,
+        profileLoading
+      });
+
       if (!user) {
         console.log('No user - redirecting to admin login');
         navigate('/admin/login', { replace: true });
@@ -31,11 +39,14 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
         navigate('/admin/login', { replace: true });
         return;
       }
+
+      console.log('Admin access granted');
     }
   }, [user, profile, loading, profileLoading, isAdmin, navigate]);
 
-  // Show loading while checking auth
+  // Show loading while checking auth - this prevents premature redirects
   if (loading || profileLoading) {
+    console.log('AdminRoute showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -46,11 +57,13 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
     );
   }
 
-  // Don't render if not properly authenticated and authorized
+  // Double check: Don't render if not properly authenticated and authorized
   if (!user || !profile || !isAdmin) {
+    console.log('AdminRoute blocking access - insufficient permissions');
     return null;
   }
 
+  console.log('AdminRoute rendering children');
   return <>{children}</>;
 };
 

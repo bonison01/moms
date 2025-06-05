@@ -8,13 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Package } from 'lucide-react';
+import { Loader2, Plus, Package, Upload } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   
   const [productForm, setProductForm] = useState({
     name: '',
@@ -25,6 +28,46 @@ const Dashboard = () => {
     is_active: true,
     image_url: ''
   });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImageFile(file);
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      setProductForm({ ...productForm, image_url: data.publicUrl });
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully",
+      });
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+      setImageFile(null);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +85,7 @@ const Dashboard = () => {
         category: productForm.category.trim() || null,
         stock_quantity: parseInt(productForm.stock_quantity) || 10,
         is_active: productForm.is_active,
-        image_url: productForm.image_url.trim() || null
+        image_url: productForm.image_url || null
       };
 
       const { error } = await supabase
@@ -66,6 +109,7 @@ const Dashboard = () => {
         is_active: true,
         image_url: ''
       });
+      setImageFile(null);
 
     } catch (error: any) {
       console.error('Error creating product:', error);
@@ -93,9 +137,17 @@ const Dashboard = () => {
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
               <p className="text-gray-600 mt-1">Welcome back, {profile?.full_name || user?.email}</p>
             </div>
-            <Button onClick={handleSignOut} variant="outline">
-              Sign Out
-            </Button>
+            <div className="flex space-x-4">
+              <Link to="/admin/products">
+                <Button variant="outline" className="flex items-center space-x-2">
+                  <Package className="h-4 w-4" />
+                  <span>Manage Products</span>
+                </Button>
+              </Link>
+              <Button onClick={handleSignOut} variant="outline">
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -196,14 +248,29 @@ const Dashboard = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="image_url">Image URL</Label>
+                    <Label htmlFor="image">Product Image</Label>
                     <Input
-                      id="image_url"
-                      type="url"
-                      value={productForm.image_url}
-                      onChange={(e) => setProductForm({ ...productForm, image_url: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
+                      id="image"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
                     />
+                    {uploading && (
+                      <div className="flex items-center mt-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <p className="text-sm text-gray-500">Uploading...</p>
+                      </div>
+                    )}
+                    {productForm.image_url && (
+                      <div className="mt-2">
+                        <img
+                          src={productForm.image_url}
+                          alt="Product preview"
+                          className="w-20 h-20 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -226,7 +293,7 @@ const Dashboard = () => {
                     <Label htmlFor="is_active">Product is active</Label>
                   </div>
 
-                  <Button type="submit" disabled={loading} className="w-full">
+                  <Button type="submit" disabled={loading || uploading} className="w-full">
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Product
                   </Button>

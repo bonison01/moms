@@ -7,9 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Loader2, Crown, CreditCard, User } from 'lucide-react';
+import { Users, Loader2, Crown, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { UserProfile, UserRole } from '@/hooks/useAuth';
+import { UserProfile } from '@/hooks/useAuthContext';
+
+type UserRole = 'admin' | 'user';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -26,7 +28,14 @@ const AdminUsers = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      
+      // Type cast the roles to ensure compatibility
+      const typedUsers: UserProfile[] = (data || []).map(user => ({
+        ...user,
+        role: user.role as UserRole
+      }));
+      
+      setUsers(typedUsers);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({
@@ -77,9 +86,7 @@ const AdminUsers = () => {
     switch (role) {
       case 'admin':
         return <Crown className="h-4 w-4" />;
-      case 'paying_user':
-        return <CreditCard className="h-4 w-4" />;
-      case 'free_user':
+      case 'user':
         return <User className="h-4 w-4" />;
       default:
         return <User className="h-4 w-4" />;
@@ -90,9 +97,7 @@ const AdminUsers = () => {
     switch (role) {
       case 'admin':
         return 'default';
-      case 'paying_user':
-        return 'secondary';
-      case 'free_user':
+      case 'user':
         return 'outline';
       default:
         return 'outline';
@@ -102,8 +107,7 @@ const AdminUsers = () => {
   const roleStats = {
     total: users.length,
     admin: users.filter(u => u.role === 'admin').length,
-    paying: users.filter(u => u.role === 'paying_user').length,
-    free: users.filter(u => u.role === 'free_user').length,
+    user: users.filter(u => u.role === 'user').length,
   };
 
   return (
@@ -116,7 +120,7 @@ const AdminUsers = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -139,21 +143,11 @@ const AdminUsers = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paying Users</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{roleStats.paying}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Free Users</CardTitle>
+              <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{roleStats.free}</div>
+              <div className="text-2xl font-bold">{roleStats.user}</div>
             </CardContent>
           </Card>
         </div>
@@ -206,7 +200,7 @@ const AdminUsers = () => {
                         <TableCell>
                           <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center space-x-1 w-fit">
                             {getRoleIcon(user.role)}
-                            <span className="capitalize">{user.role.replace('_', ' ')}</span>
+                            <span className="capitalize">{user.role}</span>
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -227,8 +221,7 @@ const AdminUsers = () => {
                               )}
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="free_user">Free User</SelectItem>
-                              <SelectItem value="paying_user">Paying User</SelectItem>
+                              <SelectItem value="user">User</SelectItem>
                               <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                           </Select>

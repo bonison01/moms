@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type UserRole = 'admin' | 'paying_user' | 'free_user';
+export type UserRole = 'admin' | 'user';
 
 export interface UserProfile {
   id: string;
@@ -37,7 +38,12 @@ export const useAuth = () => {
         setProfile(null);
       } else {
         console.log('Profile fetched successfully:', data);
-        setProfile(data);
+        // Type cast the role to ensure compatibility
+        const profileData: UserProfile = {
+          ...data,
+          role: data.role as UserRole
+        };
+        setProfile(profileData);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -176,8 +182,8 @@ export const useAuth = () => {
   };
 
   const isAdmin = profile?.role === 'admin';
-  const isPaying = profile?.role === 'paying_user';
-  const isFree = profile?.role === 'free_user';
+  const isPaying = false; // Not used in new system
+  const isFree = profile?.role === 'user';
 
   console.log('Auth state:', {
     user: !!user,

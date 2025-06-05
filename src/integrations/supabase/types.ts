@@ -62,28 +62,28 @@ export type Database = {
       }
       profiles: {
         Row: {
-          created_at: string | null
+          created_at: string
           email: string | null
           full_name: string | null
           id: string
-          role: Database["public"]["Enums"]["user_role"] | null
-          updated_at: string | null
+          role: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
+          role?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
+          role?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -96,12 +96,16 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: boolean
       }
+      create_admin_user: {
+        Args: { user_email: string }
+        Returns: undefined
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
       is_admin: {
-        Args: { user_id: string }
+        Args: { user_id?: string }
         Returns: boolean
       }
     }

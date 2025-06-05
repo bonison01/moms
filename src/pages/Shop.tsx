@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Product {
@@ -14,6 +14,7 @@ interface Product {
   description: string | null;
   category: string | null;
   is_active: boolean;
+  stock_quantity: number | null;
 }
 
 const Shop = () => {
@@ -30,7 +31,7 @@ const Shop = () => {
       console.log('Fetching products for shop page...');
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, description, category, is_active')
+        .select('id, name, price, image_url, description, category, is_active, stock_quantity')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -75,42 +76,53 @@ const Shop = () => {
               <span className="ml-2 text-gray-600">Loading products...</span>
             </div>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  id={product.id}
-                  name={product.name}
-                  price={`₹${product.price}`}
-                  image={product.image_url || '/placeholder.svg'}
-                  description={product.description || 'No description available'}
-                />
-              ))}
-            </div>
+            <>
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Available Products</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto">
+                  Choose from our selection of {products.length} premium products
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {products.map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    id={product.id}
+                    name={product.name}
+                    price={`₹${product.price}`}
+                    image={product.image_url || '/placeholder.svg'}
+                    description={product.description || 'No description available'}
+                  />
+                ))}
+              </div>
+            </>
           ) : (
-            <div className="text-center py-16">
+            <div className="text-center py-20">
+              <Package className="h-20 w-20 text-gray-300 mx-auto mb-6" />
               <h3 className="text-2xl font-bold text-gray-900 mb-4">No Products Available</h3>
-              <p className="text-gray-600 mb-8">
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
                 We're working on adding new products. Please check back soon!
               </p>
             </div>
           )}
           
-          {/* Coming Soon */}
-          <div className="mt-16 text-center">
-            <div className="bg-gray-50 p-8 rounded-lg shadow-md max-w-md mx-auto border border-gray-200">
-              <h3 className="text-2xl font-bold text-black mb-4">More Products Coming Soon!</h3>
-              <p className="text-gray-600 mb-6">
-                We're constantly working on new flavors and products to add to our collection. 
-                Stay tuned for exciting additions to the Momsgoogoo Foods family.
-              </p>
-              <div className="bg-gray-100 p-4 rounded-lg border border-gray-300">
-                <p className="text-black font-medium">
-                  Sign up for our newsletter to be the first to know about new products!
+          {/* Coming Soon Section - only show if we have products */}
+          {products.length > 0 && (
+            <div className="mt-16 text-center">
+              <div className="bg-gray-50 p-8 rounded-lg shadow-md max-w-md mx-auto border border-gray-200">
+                <h3 className="text-2xl font-bold text-black mb-4">More Products Coming Soon!</h3>
+                <p className="text-gray-600 mb-6">
+                  We're constantly working on new flavors and products to add to our collection. 
+                  Stay tuned for exciting additions to the Momsgoogoo Foods family.
                 </p>
+                <div className="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                  <p className="text-black font-medium">
+                    Sign up for our newsletter to be the first to know about new products!
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
     </Layout>

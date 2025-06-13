@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart } from 'lucide-react';
+import AuthButton from './AuthButton';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,6 +53,7 @@ const Navbar = () => {
             <button className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors">
               <ShoppingCart className="w-5 h-5" />
             </button>
+            <AuthButton />
           </div>
 
           {/* Mobile menu button */}
@@ -87,6 +89,9 @@ const Navbar = () => {
                 <ShoppingCart className="w-5 h-5 inline mr-2" />
                 Cart
               </button>
+              <div className="px-3 py-2">
+                <AuthButton />
+              </div>
             </div>
           </div>
         )}

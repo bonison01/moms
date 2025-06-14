@@ -19,17 +19,21 @@ const AuthButton = () => {
 
   // If authenticated, show user info and dashboard link
   if (isAuthenticated) {
+    const dashboardPath = isAdmin ? '/admin' : '/customer-dashboard';
+    const buttonText = isAdmin ? 'Admin Panel' : 'My Account';
+    const icon = isAdmin ? <Shield className="h-4 w-4" /> : <User className="h-4 w-4" />;
+
     return (
       <div className="flex items-center space-x-2">
         <Button
           variant="outline"
-          onClick={() => navigate(isAdmin ? '/admin' : '/dashboard')}
+          onClick={() => navigate(dashboardPath)}
           className="flex items-center space-x-2"
         >
-          {isAdmin ? <Shield className="h-4 w-4" /> : <User className="h-4 w-4" />}
-          <span>{isAdmin ? 'Admin Panel' : 'Dashboard'}</span>
+          {icon}
+          <span>{buttonText}</span>
         </Button>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-gray-600 hidden md:block">
           Welcome, {profile?.full_name || 'User'}
         </span>
       </div>

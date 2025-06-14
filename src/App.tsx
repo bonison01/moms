@@ -13,6 +13,7 @@ import Product from "./pages/Product";
 import Reviews from "./pages/Reviews";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import ProductManagement from "./pages/ProductManagement";
 import NotFound from "./pages/NotFound";
 import "./App.css";
@@ -36,6 +37,7 @@ function App() {
               <Route path="/reviews" element={<Reviews />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/customer-dashboard" element={<CustomerDashboard />} />
               <Route path="/admin" element={<ProductManagement />} />
               <Route path="/admin/products" element={<ProductManagement />} />
               <Route path="*" element={<NotFound />} />

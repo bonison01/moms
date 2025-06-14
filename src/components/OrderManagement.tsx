@@ -22,7 +22,7 @@ interface Order {
   courier_contact: string;
   tracking_id: string;
   created_at: string;
-  profiles: {
+  user_profile: {
     email: string;
     full_name: string;
   } | null;
@@ -56,7 +56,8 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
+      // First get all orders
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
           id,
@@ -70,33 +71,44 @@ const OrderManagement = () => {
           courier_name,
           courier_contact,
           tracking_id,
-          created_at,
-          profiles (
-            email,
-            full_name
-          ),
-          order_items (
-            id,
-            quantity,
-            price,
-            product:products (
-              name
-            )
-          )
+          created_at
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
-      // Type assertion to handle the Supabase response correctly
-      const ordersData = (data || []) as any[];
-      const typedOrders: Order[] = ordersData.map(order => ({
-        ...order,
-        profiles: order.profiles || null,
-        order_items: order.order_items || []
-      }));
-      
-      setOrders(typedOrders);
+      if (ordersError) throw ordersError;
+
+      // Get order items for each order
+      const ordersWithItems = await Promise.all(
+        (ordersData || []).map(async (order) => {
+          // Get order items
+          const { data: orderItems } = await supabase
+            .from('order_items')
+            .select(`
+              id,
+              quantity,
+              price,
+              product:products (
+                name
+              )
+            `)
+            .eq('order_id', order.id);
+
+          // Get user profile
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', order.user_id)
+            .single();
+
+          return {
+            ...order,
+            user_profile: userProfile,
+            order_items: orderItems || []
+          };
+        })
+      );
+
+      setOrders(ordersWithItems);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       toast({
@@ -232,8 +244,8 @@ const OrderManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{order.profiles?.full_name || 'N/A'}</p>
-                        <p className="text-sm text-gray-500">{order.profiles?.email || 'N/A'}</p>
+                        <p className="font-medium">{order.user_profile?.full_name || 'N/A'}</p>
+                        <p className="text-sm text-gray-500">{order.user_profile?.email || 'N/A'}</p>
                       </div>
                     </TableCell>
                     <TableCell>

@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, ShoppingCart, ExternalLink, Sparkles } from 'lucide-react';
+import { Star, ShoppingCart, ExternalLink, Sparkles, Heart, Eye, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/hooks/useCartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +21,8 @@ interface Product {
 const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const { addToCart } = useCart();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -56,7 +58,7 @@ const FeaturedProducts = () => {
     try {
       await addToCart(product.id, 1);
       toast({
-        title: "Added to Cart",
+        title: "🛒 Added to Cart",
         description: `${product.name} has been added to your cart`,
       });
     } catch (error) {
@@ -68,111 +70,220 @@ const FeaturedProducts = () => {
     }
   };
 
+  const toggleFavorite = (productId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(productId)) {
+        newFavorites.delete(productId);
+        toast({
+          title: "💔 Removed from favorites",
+          description: "Product removed from your wishlist",
+        });
+      } else {
+        newFavorites.add(productId);
+        toast({
+          title: "❤️ Added to favorites",
+          description: "Product added to your wishlist",
+        });
+      }
+      return newFavorites;
+    });
+  };
+
   if (loading) {
     return (
-      <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Sparkles className="h-5 w-5 text-purple-600" />
-            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Featured Products
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <div className="inline-flex items-center text-gray-500">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 mr-2"></div>
-              Loading products...
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 opacity-60"></div>
+        <div className="relative">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-6">
+              <Sparkles className="h-8 w-8 text-purple-600 mr-3 animate-pulse" />
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+                Our Signature Products
+              </h2>
+            </div>
+            <div className="w-24 h-1 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mb-6 rounded-full"></div>
+          </div>
+          <div className="text-center py-16">
+            <div className="inline-flex items-center space-x-3 text-gray-600">
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
+              <span className="text-lg font-medium">Discovering amazing products for you...</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50 backdrop-blur-sm animate-fade-in overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center space-x-2">
-            <Sparkles className="h-5 w-5" />
-            <span>Featured Products</span>
-          </CardTitle>
-          <Link to="/shop">
-            <Button variant="outline" size={isMobile ? "sm" : "default"} className="bg-white/20 border-white/30 text-white hover:bg-white/30">
-              <ExternalLink className="h-4 w-4 mr-1" />
-              {isMobile ? "Shop" : "View All"}
-            </Button>
-          </Link>
+    <div className="relative overflow-hidden">
+      {/* Background with animated gradients */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 opacity-60"></div>
+      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-200 to-purple-200 rounded-full blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+      
+      <div className="relative">
+        {/* Header Section */}
+        <div className="text-center mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <Sparkles className="h-8 w-8 text-purple-600 mr-3 animate-bounce" />
+            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+              Our Signature Products
+            </h2>
+          </div>
+          <div className="w-24 h-1 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mb-6 rounded-full"></div>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Handcrafted with love, perfected with tradition. Discover the authentic flavors that make every meal extraordinary.
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-6">
+
         {products.length > 0 ? (
-          <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-2'}`}>
-            {products.map((product, index) => (
-              <div
-                key={product.id}
-                className="group border rounded-xl p-4 hover:shadow-lg transition-all duration-300 bg-white/80 backdrop-blur-sm hover:-translate-y-1 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'space-x-4'}`}>
-                  <div className={`${isMobile ? 'w-full h-32' : 'w-20 h-20'} bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform duration-300`}>
+          <>
+            {/* Products Grid */}
+            <div className={`grid gap-8 mb-12 ${isMobile ? 'grid-cols-1' : 'md:grid-cols-2 lg:grid-cols-4'}`}>
+              {products.map((product, index) => (
+                <Card
+                  key={product.id}
+                  className="group relative bg-white/80 backdrop-blur-lg border-0 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden rounded-2xl hover:-translate-y-2 animate-fade-in"
+                  style={{ animationDelay: `${index * 0.15}s` }}
+                  onMouseEnter={() => setHoveredProduct(product.id)}
+                  onMouseLeave={() => setHoveredProduct(null)}
+                >
+                  {/* Favorite Button */}
+                  <button
+                    onClick={() => toggleFavorite(product.id)}
+                    className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white transition-all duration-300 hover:scale-110"
+                  >
+                    <Heart
+                      className={`h-5 w-5 transition-all duration-300 ${
+                        favorites.has(product.id)
+                          ? 'text-red-500 fill-red-500'
+                          : 'text-gray-400 hover:text-red-500'
+                      }`}
+                    />
+                  </button>
+
+                  {/* Product Image */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 h-64">
                     <img
                       src={product.image_url || '/placeholder.svg'}
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                       loading="lazy"
                     />
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <h3 className={`font-semibold text-gray-900 group-hover:text-purple-600 transition-colors ${isMobile ? 'text-base' : 'text-sm'} line-clamp-1`}>
-                      {product.name}
-                    </h3>
-                    <p className={`text-gray-600 ${isMobile ? 'text-sm' : 'text-xs'} line-clamp-2`}>
-                      {product.description}
-                    </p>
-                    {product.offers && (
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                        <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">
-                          {product.offers}
-                        </span>
-                      </div>
-                    )}
-                    <div className={`flex items-center ${isMobile ? 'justify-between' : 'justify-between'} pt-2`}>
-                      <span className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-lg'}`}>
-                        ₹{product.price.toLocaleString()}
-                      </span>
-                      <div className="flex space-x-2">
-                        <Link to={`/product/${product.id}`}>
-                          <Button variant="outline" size={isMobile ? "sm" : "sm"} className="hover-scale">
-                            View
-                          </Button>
-                        </Link>
+                    
+                    {/* Overlay on hover */}
+                    <div className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-all duration-300 flex items-center justify-center ${
+                      hoveredProduct === product.id ? 'opacity-100' : 'opacity-0'
+                    }`}>
+                      <div className="flex space-x-3">
                         <Button
-                          size={isMobile ? "sm" : "sm"}
-                          onClick={() => handleAddToCart(product)}
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover-scale"
+                          size="sm"
+                          className="bg-white/20 border border-white/30 text-white hover:bg-white hover:text-black transition-all duration-300"
                         >
-                          <ShoppingCart className="h-3 w-3 mr-1" />
-                          Add
+                          <Eye className="h-4 w-4 mr-1" />
+                          Quick View
                         </Button>
                       </div>
                     </div>
+
+                    {/* Offer Badge */}
+                    {product.offers && (
+                      <div className="absolute top-4 left-4 z-10">
+                        <div className="flex items-center bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full shadow-lg">
+                          <Star className="h-3 w-3 mr-1" />
+                          <span className="text-xs font-semibold">{product.offers}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  <CardContent className="p-6">
+                    {/* Product Info */}
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300 line-clamp-1">
+                        {product.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-3">
+                        {product.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-baseline space-x-1">
+                          <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            ₹{product.price.toLocaleString()}
+                          </span>
+                          <span className="text-sm text-gray-500">per unit</span>
+                        </div>
+                        
+                        {/* Rating Stars */}
+                        <div className="flex items-center space-x-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                          ))}
+                          <span className="text-xs text-gray-500 ml-1">(4.9)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-3">
+                      <Button
+                        onClick={() => handleAddToCart(product)}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Add to Cart
+                      </Button>
+                      
+                      <Link to={`/product/${product.id}`} className="block">
+                        <Button
+                          variant="outline"
+                          className="w-full border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 py-3 rounded-xl"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Call to Action */}
+            <div className="text-center">
+              <div className="inline-flex items-center bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl border border-white/20">
+                <div className="text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                    Discover More Amazing Products
+                  </h3>
+                  <p className="text-gray-600 mb-6 max-w-md">
+                    Explore our complete collection of handcrafted delicacies and traditional favorites
+                  </p>
+                  <Link to="/shop">
+                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                      <span className="mr-2">Explore All Products</span>
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          </>
         ) : (
-          <div className="text-center py-8">
-            <Sparkles className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <div className="text-gray-500">No featured products available</div>
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-6">
+              <Sparkles className="h-12 w-12 text-purple-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">No Featured Products Yet</h3>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              We're curating the perfect selection of signature products for you. Check back soon!
+            </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

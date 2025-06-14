@@ -11,9 +11,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, CreditCard, Truck } from 'lucide-react';
 
 interface UserProfile {
+  full_name?: string;
   address_line_1?: string;
   address_line_2?: string;
   city?: string;
@@ -31,8 +33,10 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({});
+  const [saveProfile, setSaveProfile] = useState(true);
   
   const [formData, setFormData] = useState({
+    full_name: '',
     address_line_1: '',
     address_line_2: '',
     city: '',
@@ -43,25 +47,37 @@ const Checkout = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to continue with checkout",
+        variant: "destructive",
+      });
       navigate('/auth');
       return;
     }
 
     if (cartItems.length === 0) {
+      toast({
+        title: "Empty Cart",
+        description: "Please add items to your cart before checkout",
+        variant: "destructive",
+      });
       navigate('/shop');
       return;
     }
 
     fetchUserProfile();
-  }, [isAuthenticated, cartItems, navigate]);
+  }, [isAuthenticated, cartItems, navigate, toast]);
 
   const fetchUserProfile = async () => {
     if (!user) return;
 
     try {
+      console.log('Fetching profile for user:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
-        .select('address_line_1, address_line_2, city, state, postal_code, phone')
+        .select('full_name, address_line_1, address_line_2, city, state, postal_code, phone')
         .eq('id', user.id)
         .single();
 
@@ -71,8 +87,10 @@ const Checkout = () => {
       }
 
       if (data) {
+        console.log('Profile data fetched:', data);
         setProfile(data);
         setFormData({
+          full_name: data.full_name || '',
           address_line_1: data.address_line_1 || '',
           address_line_2: data.address_line_2 || '',
           city: data.city || '',
@@ -93,25 +111,43 @@ const Checkout = () => {
     }));
   };
 
-  const handlePlaceOrder = async () => {
-    if (!user || cartItems.length === 0) return;
-
-    // Validate required fields
-    if (!formData.address_line_1 || !formData.city || !formData.state || !formData.postal_code || !formData.phone) {
+  const validateForm = () => {
+    const required = ['full_name', 'address_line_1', 'city', 'state', 'postal_code', 'phone'];
+    const missing = required.filter(field => !formData[field as keyof typeof formData]?.trim());
+    
+    if (missing.length > 0) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required address fields",
+        description: `Please fill in: ${missing.join(', ').replace(/_/g, ' ')}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!user || cartItems.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please ensure you are logged in and have items in your cart",
         variant: "destructive",
       });
       return;
     }
 
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       setIsLoading(true);
-      console.log('Processing order for user:', user.id);
+      console.log('Starting checkout process for user:', user.id);
 
       const totalAmount = getTotalAmount();
       const deliveryAddress = {
+        full_name: formData.full_name,
         address_line_1: formData.address_line_1,
         address_line_2: formData.address_line_2,
         city: formData.city,
@@ -119,25 +155,45 @@ const Checkout = () => {
         postal_code: formData.postal_code
       };
 
-      // Update user profile with address info
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          address_line_1: formData.address_line_1,
-          address_line_2: formData.address_line_2,
-          city: formData.city,
-          state: formData.state,
-          postal_code: formData.postal_code,
-          phone: formData.phone,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+      // Save profile if requested
+      if (saveProfile) {
+        console.log('Updating user profile with address info');
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            full_name: formData.full_name,
+            address_line_1: formData.address_line_1,
+            address_line_2: formData.address_line_2,
+            city: formData.city,
+            state: formData.state,
+            postal_code: formData.postal_code,
+            phone: formData.phone,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
 
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          toast({
+            title: "Profile Update Failed",
+            description: "Could not save your address information",
+            variant: "destructive",
+          });
+        } else {
+          console.log('Profile updated successfully');
+        }
       }
 
       // Create order
+      console.log('Creating order with data:', {
+        user_id: user.id,
+        total_amount: totalAmount,
+        payment_method: paymentMethod,
+        delivery_address: deliveryAddress,
+        phone: formData.phone,
+        status: 'pending'
+      });
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -153,10 +209,10 @@ const Checkout = () => {
 
       if (orderError) {
         console.error('Error creating order:', orderError);
-        throw orderError;
+        throw new Error(`Order creation failed: ${orderError.message}`);
       }
 
-      console.log('Order created:', order.id);
+      console.log('Order created successfully:', order.id);
 
       // Create order items
       const orderItems = cartItems.map(item => ({
@@ -166,21 +222,25 @@ const Checkout = () => {
         price: item.product.price
       }));
 
+      console.log('Creating order items:', orderItems);
+
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
 
       if (itemsError) {
         console.error('Error creating order items:', itemsError);
-        throw itemsError;
+        throw new Error(`Order items creation failed: ${itemsError.message}`);
       }
+
+      console.log('Order items created successfully');
 
       // Clear cart after successful order
       await clearCart();
 
       toast({
-        title: "Order Placed Successfully",
-        description: `Order #${order.id.slice(0, 8)} has been placed for ₹${totalAmount}`,
+        title: "Order Placed Successfully! 🎉",
+        description: `Order #${order.id.slice(0, 8)} has been placed for ₹${totalAmount}. You will receive a confirmation shortly.`,
       });
 
       navigate('/customer-dashboard');
@@ -189,7 +249,7 @@ const Checkout = () => {
       console.error('Checkout error:', error);
       toast({
         title: "Checkout Failed",
-        description: "There was an error processing your order. Please try again.",
+        description: error.message || "There was an error processing your order. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -254,6 +314,36 @@ const Checkout = () => {
 
           {/* Checkout Form */}
           <div className="space-y-6">
+            {/* Customer Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="full_name">Full Name *</Label>
+                  <Input
+                    id="full_name"
+                    value={formData.full_name}
+                    onChange={(e) => handleInputChange('full_name', e.target.value)}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="Enter your phone number"
+                    required
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Delivery Address */}
             <Card>
               <CardHeader>
@@ -304,27 +394,26 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="postal_code">Postal Code *</Label>
-                    <Input
-                      id="postal_code"
-                      value={formData.postal_code}
-                      onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                      placeholder="Postal Code"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="Phone Number"
-                      required
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="postal_code">Postal Code *</Label>
+                  <Input
+                    id="postal_code"
+                    value={formData.postal_code}
+                    onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                    placeholder="Postal Code"
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="save-profile"
+                    checked={saveProfile}
+                    onCheckedChange={(checked) => setSaveProfile(checked as boolean)}
+                  />
+                  <Label htmlFor="save-profile" className="text-sm">
+                    Save this information for future orders
+                  </Label>
                 </div>
               </CardContent>
             </Card>
@@ -366,8 +455,9 @@ const Checkout = () => {
               onClick={handlePlaceOrder}
               disabled={isLoading}
               className="w-full bg-black text-white hover:bg-gray-800 py-3"
+              size="lg"
             >
-              {isLoading ? 'Processing...' : `Place Order - ₹${getTotalAmount()}`}
+              {isLoading ? 'Processing Order...' : `Place Order - ₹${getTotalAmount()}`}
             </Button>
           </div>
         </div>

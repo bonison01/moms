@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuthContext';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import TestimonialCard from '../components/TestimonialCard';
+import FeaturedProducts from '../components/FeaturedProducts';
 
 interface FeaturedProduct {
   id: string;
@@ -30,6 +31,7 @@ const Index = () => {
         .from('products')
         .select('id, name, price, image_url, description')
         .eq('is_active', true)
+        .eq('featured', true)
         .limit(4)
         .order('created_at', { ascending: false });
 
@@ -139,50 +141,10 @@ const Index = () => {
         </section>
       )}
 
-      {/* Featured Products */}
+      {/* Featured Products - Using the new FeaturedProducts component */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
-              Our Signature Products
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Taste the difference that authentic ingredients and traditional methods make
-            </p>
-          </div>
-          
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading featured products...</p>
-            </div>
-          ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {featuredProducts.map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  id={product.id}
-                  name={product.name}
-                  price={`₹${product.price}`}
-                  image={product.image_url || '/placeholder.svg'}
-                  description={product.description || 'No description available'}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-600">No featured products available at the moment.</p>
-            </div>
-          )}
-          
-          <div className="text-center mt-8">
-            <Link
-              to="/shop"
-              className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors inline-block"
-            >
-              View All Products
-            </Link>
-          </div>
+          <FeaturedProducts />
         </div>
       </section>
 

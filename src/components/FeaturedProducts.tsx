@@ -35,6 +35,7 @@ const FeaturedProducts = () => {
         .from('products')
         .select('id, name, price, image_url, description, offers')
         .eq('is_active', true)
+        .eq('featured', true)
         .limit(isMobile ? 2 : 4)
         .order('created_at', { ascending: false });
 

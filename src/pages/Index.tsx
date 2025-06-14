@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +6,7 @@ import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import TestimonialCard from '../components/TestimonialCard';
 import FeaturedProducts from '../components/FeaturedProducts';
+import { ArrowRight } from 'lucide-react';
 
 interface FeaturedProduct {
   id: string;
@@ -16,13 +16,27 @@ interface FeaturedProduct {
   description: string | null;
 }
 
+interface Review {
+  id: string;
+  title: string;
+  comment: string;
+  rating: number;
+  created_at: string;
+  profiles: {
+    full_name: string | null;
+    email: string | null;
+  } | null;
+}
+
 const Index = () => {
   const { isAuthenticated } = useAuth();
   const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchFeaturedProducts();
+    fetchReviews();
   }, []);
 
   const fetchFeaturedProducts = async () => {
@@ -48,7 +62,38 @@ const Index = () => {
     }
   };
 
-  const testimonials = [
+  const fetchReviews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          id,
+          title,
+          comment,
+          rating,
+          created_at,
+          profiles:user_id (
+            full_name,
+            email
+          )
+        `)
+        .is('product_id', null)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) {
+        console.error('Error fetching reviews:', error);
+        return;
+      }
+
+      setReviews(data || []);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
+
+  // Fallback testimonials for when there are no database reviews
+  const fallbackTestimonials = [
     {
       name: 'Priya Sharma',
       rating: 5,
@@ -141,9 +186,24 @@ const Index = () => {
         </section>
       )}
 
-      {/* Featured Products - Using the new FeaturedProducts component */}
+      {/* Featured Products - With Title and Shop More Button */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
+              Our Signature Products
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+              Discover our most loved authentic Manipuri foods, crafted with traditional recipes and premium ingredients
+            </p>
+            <Link
+              to="/shop"
+              className="inline-flex items-center bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors gap-2"
+            >
+              Shop More
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
           <FeaturedProducts />
         </div>
       </section>
@@ -183,7 +243,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Customer Reviews - From Database */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -194,11 +254,45 @@ const Index = () => {
               Real reviews from our valued customers across India
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <TestimonialCard key={index} {...testimonial} />
-            ))}
-          </div>
+          
+          {reviews.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {reviews.map((review) => (
+                <div key={review.id} className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                  <div className="flex items-center mb-4">
+                    <div className="flex text-black">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={i < review.rating ? 'text-black' : 'text-gray-300'}>
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <h4 className="font-semibold text-black mb-2">{review.title}</h4>
+                  <p className="text-gray-600 mb-4 italic">"{review.comment}"</p>
+                  <div className="text-sm">
+                    <div className="font-semibold text-black">
+                      {review.profiles?.full_name || 'Anonymous Customer'}
+                    </div>
+                    <div className="text-gray-500">
+                      {new Date(review.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {fallbackTestimonials.map((testimonial, index) => (
+                <TestimonialCard key={index} {...testimonial} />
+              ))}
+            </div>
+          )}
+          
           <div className="text-center mt-8">
             <Link
               to="/reviews"

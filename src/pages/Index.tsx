@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,9 +29,9 @@ const Index = () => {
       const { data, error } = await supabase
         .from('products')
         .select('id, name, price, image_url, description')
-        .eq('featured', true)
         .eq('is_active', true)
-        .limit(4);
+        .limit(4)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching featured products:', error);

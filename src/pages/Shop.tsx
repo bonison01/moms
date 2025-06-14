@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuthContext';
+import { useCart } from '@/hooks/useCartContext';
 import Layout from '../components/Layout';
-import ProductCard from '../components/ProductCard';
-import { Loader2, Package, ShoppingCart, User } from 'lucide-react';
+import CartSidebar from '../components/CartSidebar';
+import { Loader2, Package, ShoppingCart, User, Plus, Minus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -23,8 +24,11 @@ interface Product {
 const Shop = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
+  const { addToCart, cartCount } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,6 +51,13 @@ const Shop = () => {
       
       console.log('Products fetched successfully:', data?.length || 0);
       setProducts(data || []);
+      
+      // Initialize quantities
+      const initialQuantities: { [key: string]: number } = {};
+      (data || []).forEach(product => {
+        initialQuantities[product.id] = 1;
+      });
+      setQuantities(initialQuantities);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
@@ -60,7 +71,7 @@ const Shop = () => {
     }
   };
 
-  const handleBuyNow = (product: Product) => {
+  const handleBuyNow = async (product: Product) => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -71,17 +82,12 @@ const Shop = () => {
       return;
     }
 
-    // For now, show a success message - this can be enhanced with actual payment processing
-    toast({
-      title: "Purchase Initiated",
-      description: `Starting purchase process for ${product.name}`,
-    });
-    
-    // Navigate to product detail page for full purchase flow
-    navigate(`/product/${product.id}`);
+    // Add to cart and then navigate to checkout
+    await addToCart(product.id, quantities[product.id] || 1);
+    setCartOpen(true);
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = async (product: Product) => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -92,15 +98,36 @@ const Shop = () => {
       return;
     }
 
-    // For now, show a success message - this can be enhanced with actual cart functionality
-    toast({
-      title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
-    });
+    await addToCart(product.id, quantities[product.id] || 1);
+  };
+
+  const updateQuantity = (productId: string, change: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: Math.max(1, (prev[productId] || 1) + change)
+    }));
   };
 
   return (
     <Layout>
+      {/* Cart Sidebar */}
+      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+
+      {/* Cart Button - Fixed Position */}
+      {isAuthenticated && (
+        <Button
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-6 right-6 z-40 rounded-full h-14 w-14 bg-black text-white hover:bg-gray-800 shadow-lg"
+        >
+          <ShoppingCart className="h-6 w-6" />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+              {cartCount}
+            </span>
+          )}
+        </Button>
+      )}
+
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-black to-gray-800 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -112,9 +139,19 @@ const Shop = () => {
           {/* Authentication Status */}
           <div className="mt-8">
             {isAuthenticated ? (
-              <div className="flex items-center justify-center space-x-2 text-green-400">
-                <User className="h-5 w-5" />
-                <span>Welcome back, {user?.email}</span>
+              <div className="flex items-center justify-center space-x-4">
+                <div className="flex items-center space-x-2 text-green-400">
+                  <User className="h-5 w-5" />
+                  <span>Welcome back, {user?.email}</span>
+                </div>
+                <Button 
+                  onClick={() => setCartOpen(true)}
+                  variant="outline"
+                  className="text-white border-white hover:bg-white hover:text-black"
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Cart ({cartCount})
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -171,6 +208,28 @@ const Shop = () => {
                           </span>
                         )}
                       </div>
+                      
+                      {/* Quantity Selector */}
+                      {isAuthenticated && (
+                        <div className="flex items-center justify-center space-x-2 mb-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateQuantity(product.id, -1)}
+                            disabled={quantities[product.id] <= 1}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="text-sm font-medium px-3">{quantities[product.id] || 1}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateQuantity(product.id, 1)}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                       
                       {/* Action Buttons */}
                       <div className="space-y-2">

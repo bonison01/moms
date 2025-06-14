@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { User, ShoppingBag, LogOut, Search, Filter, RefreshCw } from 'lucide-react';
+import { User, ShoppingBag, LogOut, Search, Filter, RefreshCw, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -254,6 +255,36 @@ const CustomerDashboard = () => {
             <DashboardStats orders={orders} />
           </div>
 
+          {/* Featured Products Section - Card Format */}
+          <div className="mb-6 lg:mb-8">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                      <ShoppingBag className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                      <span className="truncate">Our Signature Products</span>
+                    </CardTitle>
+                    <CardDescription className="text-sm sm:text-base">
+                      Discover our most popular and carefully selected items
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    onClick={() => navigate('/shop')}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover-scale flex items-center gap-2"
+                    size={isMobile ? "sm" : "default"}
+                  >
+                    <span>Shop More</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <FeaturedProducts />
+              </CardContent>
+            </Card>
+          </div>
+
           <div className={`${isMobile ? 'space-y-6' : 'grid lg:grid-cols-4 gap-6 lg:gap-8'}`}>
             
             {/* Account Information & Reviews */}
@@ -270,11 +301,6 @@ const CustomerDashboard = () => {
 
             {/* Orders & Activity - Fullscreen */}
             <div className={`${isMobile ? 'order-1' : 'lg:col-span-3'} space-y-6`}>
-              
-              {/* Featured Products Section - Fullscreen */}
-              <div className="animate-fade-in">
-                <FeaturedProducts />
-              </div>
               
               {/* Orders Section - Fullscreen */}
               <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in">

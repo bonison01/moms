@@ -186,23 +186,16 @@ const Index = () => {
         </section>
       )}
 
-      {/* Featured Products - With Title and Shop More Button */}
+      {/* Featured Products - With Title */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
               Our Signature Products
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Discover our most loved authentic Manipuri foods, crafted with traditional recipes and premium ingredients
             </p>
-            <Link
-              to="/shop"
-              className="inline-flex items-center bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors gap-2"
-            >
-              Shop More
-              <ArrowRight className="h-4 w-4" />
-            </Link>
           </div>
           <FeaturedProducts />
         </div>

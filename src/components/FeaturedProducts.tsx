@@ -1,5 +1,7 @@
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ProductCard from './ProductCard';
 
@@ -40,17 +42,22 @@ const FeaturedProducts = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-gray-200 animate-pulse rounded-lg">
-            <div className="aspect-[4/3] w-full rounded-t-lg bg-gray-300"></div>
-            <div className="p-4 space-y-3">
-              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-              <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-              <div className="h-6 bg-gray-300 rounded w-1/3"></div>
+      <div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-gray-200 animate-pulse rounded-lg">
+              <div className="aspect-square w-full rounded-t-lg bg-gray-300"></div>
+              <div className="p-3 space-y-2">
+                <div className="h-3 bg-gray-300 rounded w-3/4"></div>
+                <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        <div className="text-center mt-6">
+          <div className="h-10 bg-gray-300 rounded w-32 mx-auto"></div>
+        </div>
       </div>
     );
   }
@@ -64,17 +71,29 @@ const FeaturedProducts = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-      {products.map((product) => (
-        <div key={product.id} className="group">
-          <ProductCard
-            {...product}
-            className="h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-            imageClassName="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            showFullDescription={true}
-          />
-        </div>
-      ))}
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {products.map((product) => (
+          <div key={product.id} className="group">
+            <ProductCard
+              {...product}
+              className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+              imageClassName="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              showFullDescription={false}
+              compact={true}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="text-center mt-8">
+        <Link
+          to="/shop"
+          className="inline-flex items-center bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors gap-2"
+        >
+          Shop More
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
     </div>
   );
 };

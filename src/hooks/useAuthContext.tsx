@@ -92,12 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       console.log('Profile fetched successfully:', data);
-      // Type cast the role to ensure compatibility with UserProfile interface
-      const profileData: UserProfile = {
-        ...data,
-        role: data.role as 'admin' | 'user'
-      };
-      setProfile(profileData);
+      setProfile(data as UserProfile);
     } catch (error) {
       console.error('Exception fetching profile:', error);
       setProfile(null);

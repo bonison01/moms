@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -166,7 +167,7 @@ const CustomerDashboard = () => {
         <Navbar />
         <main className="flex-grow">
           <div className="bg-white shadow-sm border-b">
-            <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3">
                 <div className="min-w-0 flex-1">
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Order Details</h1>
@@ -184,7 +185,7 @@ const CustomerDashboard = () => {
               </div>
             </div>
           </div>
-          <div className="w-full py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <OrderDetails 
               orderId={selectedOrderId} 
               onBack={handleBackToDashboard}
@@ -200,10 +201,10 @@ const CustomerDashboard = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       
-      <main className="flex-grow w-full">
+      <main className="flex-grow">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3">
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">My Account</h1>
@@ -236,17 +237,17 @@ const CustomerDashboard = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="w-full py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-          {/* Dashboard Stats */}
-          <div className="mb-6 lg:mb-8 w-full">
+        {/* Main Content - Fullscreen */}
+        <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+          {/* Dashboard Stats - Fullscreen */}
+          <div className="mb-6 lg:mb-8">
             <DashboardStats orders={orders} />
           </div>
 
-          <div className={`w-full ${isMobile ? 'space-y-6' : 'grid lg:grid-cols-4 gap-6 lg:gap-8'}`}>
+          <div className={`${isMobile ? 'space-y-6' : 'grid lg:grid-cols-4 gap-6 lg:gap-8'}`}>
             
             {/* Account Information & Saved Address */}
-            <div className={`${isMobile ? 'order-2' : 'lg:col-span-1'} w-full`}>
+            <div className={`${isMobile ? 'order-2' : 'lg:col-span-1'}`}>
               <div className="sticky top-4">
                 <ProfileEditForm 
                   isEditing={isEditingProfile}
@@ -256,16 +257,16 @@ const CustomerDashboard = () => {
               </div>
             </div>
 
-            {/* Orders & Activity */}
-            <div className={`${isMobile ? 'order-1' : 'lg:col-span-3'} space-y-6 w-full`}>
+            {/* Orders & Activity - Fullscreen */}
+            <div className={`${isMobile ? 'order-1' : 'lg:col-span-3'} space-y-6`}>
               
-              {/* Featured Products Section */}
-              <div className="animate-fade-in w-full">
+              {/* Featured Products Section - Fullscreen */}
+              <div className="animate-fade-in">
                 <FeaturedProducts />
               </div>
               
-              {/* Orders Section */}
-              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in w-full">
+              {/* Orders Section - Fullscreen */}
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
                 <CardHeader className="pb-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
@@ -281,19 +282,19 @@ const CustomerDashboard = () => {
 
                   {/* Search and Filter Controls */}
                   {orders.length > 0 && (
-                    <div className="flex flex-col gap-3 mt-4 w-full">
-                      <div className="relative w-full">
+                    <div className="flex flex-col gap-3 mt-4">
+                      <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <Input
                           placeholder={isMobile ? "Search orders..." : "Search orders by ID or product name..."}
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 w-full"
+                          className="pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
                         />
                       </div>
                       <div className="w-full sm:w-64">
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 w-full">
+                          <SelectTrigger className="bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
                             <Filter className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
                             <SelectValue placeholder="Filter by status" />
                           </SelectTrigger>
@@ -310,7 +311,7 @@ const CustomerDashboard = () => {
                     </div>
                   )}
                 </CardHeader>
-                <CardContent className="pt-0 w-full overflow-hidden">
+                <CardContent className="pt-0 overflow-hidden">
                   {loading ? (
                     <div className="text-center py-12">
                       <div className="inline-flex items-center px-4 py-2 text-gray-500">
@@ -319,11 +320,11 @@ const CustomerDashboard = () => {
                       </div>
                     </div>
                   ) : filteredOrders.length > 0 ? (
-                    <div className="space-y-4 w-full">
+                    <div className="space-y-4">
                       {filteredOrders.map((order, index) => (
                         <div 
                           key={order.id} 
-                          className="animate-fade-in hover-scale w-full"
+                          className="animate-fade-in hover-scale"
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <OrderCard

@@ -78,14 +78,14 @@ const AdminLogin = () => {
 
     try {
       console.log('Attempting login for:', email);
-      const { data, error } = await signIn(email, password);
+      const { error } = await signIn(email, password);
       
       if (error) {
         console.error('Login error:', error);
         setError(error.message);
         setActionLoading(false);
-      } else if (data.user) {
-        console.log('Login successful for:', data.user.email);
+      } else {
+        console.log('Login successful');
         toast({
           title: "Login successful",
           description: "Redirecting to admin dashboard...",
@@ -123,26 +123,20 @@ const AdminLogin = () => {
     }
 
     try {
-      const { data, error } = await signUp(email, password, fullName);
+      const { error } = await signUp(email, password, fullName);
       
       if (error) {
         setError(error.message);
         setActionLoading(false);
-      } else if (data.user && !data.session) {
-        // Email confirmation required
+      } else {
+        // Check if user needs email confirmation
         toast({
-          title: "Check your email",
+          title: "Account created",
           description: "Please check your email for a confirmation link to complete your account setup.",
         });
         resetForm();
         setActiveTab('login');
         setActionLoading(false);
-      } else {
-        toast({
-          title: "Account created",
-          description: "Your account has been created successfully!",
-        });
-        // Auth state change will handle redirect
       }
     } catch (error: any) {
       setError('An unexpected error occurred');

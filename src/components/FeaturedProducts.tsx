@@ -18,6 +18,23 @@ interface Product {
   offers: string;
 }
 
+// Product slug mapping for existing products
+const productSlugMap: Record<string, string> = {
+  'seasoned-fermented-fish': 'seasoned-fermented-fish',
+  'chicken-pickle': 'chicken-pickle',
+  'spicy-lentil-crisp': 'spicy-lentil-crisp',
+  'spicy-soybean-crisp': 'spicy-soybean-crisp',
+  'dry-chilli-chutney': 'dry-chilli-chutney',
+  'spicy-stink-beans': 'spicy-stink-beans',
+  'bamboo-shoot-chicken-pickle': 'bamboo-shoot-chicken-pickle'
+};
+
+const getProductSlug = (productName: string): string => {
+  // Convert product name to slug format
+  const slug = productName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return productSlugMap[slug] || slug;
+};
+
 const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,20 +110,20 @@ const FeaturedProducts = () => {
   if (loading) {
     return (
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 opacity-60"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50 opacity-60"></div>
         <div className="relative">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-6">
-              <Sparkles className="h-8 w-8 text-purple-600 mr-3 animate-pulse" />
-              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+              <Sparkles className="h-8 w-8 text-black mr-3 animate-pulse" />
+              <h2 className="text-4xl md:text-5xl font-bold text-black">
                 Our Signature Products
               </h2>
             </div>
-            <div className="w-24 h-1 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mb-6 rounded-full"></div>
+            <div className="w-24 h-1 bg-black mx-auto mb-6 rounded-full"></div>
           </div>
           <div className="text-center py-16">
             <div className="inline-flex items-center space-x-3 text-gray-600">
-              <div className="animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-black border-t-transparent"></div>
               <span className="text-lg font-medium">Discovering amazing products for you...</span>
             </div>
           </div>
@@ -117,21 +134,21 @@ const FeaturedProducts = () => {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Background with animated gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 opacity-60"></div>
-      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-200 to-purple-200 rounded-full blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+      {/* Background with subtle gradients */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50 opacity-60"></div>
+      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full blur-3xl opacity-10 animate-pulse"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-gray-300 to-gray-200 rounded-full blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
       
       <div className="relative">
         {/* Header Section */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
-            <Sparkles className="h-8 w-8 text-purple-600 mr-3 animate-bounce" />
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+            <Sparkles className="h-8 w-8 text-black mr-3 animate-bounce" />
+            <h2 className="text-4xl md:text-5xl font-bold text-black">
               Our Signature Products
             </h2>
           </div>
-          <div className="w-24 h-1 bg-gradient-to-r from-purple-600 to-pink-600 mx-auto mb-6 rounded-full"></div>
+          <div className="w-24 h-1 bg-black mx-auto mb-6 rounded-full"></div>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Handcrafted with love, perfected with tradition. Discover the authentic flavors that make every meal extraordinary.
           </p>
@@ -144,7 +161,7 @@ const FeaturedProducts = () => {
               {products.map((product, index) => (
                 <Card
                   key={product.id}
-                  className="group relative bg-white/80 backdrop-blur-lg border-0 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden rounded-2xl hover:-translate-y-2 animate-fade-in"
+                  className="group relative bg-white/90 backdrop-blur-lg border border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden rounded-2xl hover:-translate-y-2 animate-fade-in"
                   style={{ animationDelay: `${index * 0.15}s` }}
                   onMouseEnter={() => setHoveredProduct(product.id)}
                   onMouseLeave={() => setHoveredProduct(null)}
@@ -177,13 +194,15 @@ const FeaturedProducts = () => {
                       hoveredProduct === product.id ? 'opacity-100' : 'opacity-0'
                     }`}>
                       <div className="flex space-x-3">
-                        <Button
-                          size="sm"
-                          className="bg-white/20 border border-white/30 text-white hover:bg-white hover:text-black transition-all duration-300"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Quick View
-                        </Button>
+                        <Link to={`/product/${getProductSlug(product.name)}`}>
+                          <Button
+                            size="sm"
+                            className="bg-white/20 border border-white/30 text-white hover:bg-white hover:text-black transition-all duration-300"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Quick View
+                          </Button>
+                        </Link>
                       </div>
                     </div>
 
@@ -201,7 +220,7 @@ const FeaturedProducts = () => {
                   <CardContent className="p-6">
                     {/* Product Info */}
                     <div className="mb-4">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors duration-300 line-clamp-1">
+                      <h3 className="text-xl font-bold text-black mb-2 group-hover:text-gray-700 transition-colors duration-300 line-clamp-1">
                         {product.name}
                       </h3>
                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-3">
@@ -210,7 +229,7 @@ const FeaturedProducts = () => {
                       
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-baseline space-x-1">
-                          <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          <span className="text-2xl font-bold text-black">
                             ₹{product.price.toLocaleString()}
                           </span>
                           <span className="text-sm text-gray-500">per unit</span>
@@ -230,16 +249,16 @@ const FeaturedProducts = () => {
                     <div className="space-y-3">
                       <Button
                         onClick={() => handleAddToCart(product)}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         Add to Cart
                       </Button>
                       
-                      <Link to={`/product/${product.id}`} className="block">
+                      <Link to={`/product/${getProductSlug(product.name)}`} className="block">
                         <Button
                           variant="outline"
-                          className="w-full border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-300 py-3 rounded-xl"
+                          className="w-full border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all duration-300 py-3 rounded-xl"
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
@@ -253,16 +272,16 @@ const FeaturedProducts = () => {
 
             {/* Call to Action */}
             <div className="text-center">
-              <div className="inline-flex items-center bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl border border-white/20">
+              <div className="inline-flex items-center bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl border border-gray-200">
                 <div className="text-center">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-2xl font-bold text-black mb-3">
                     Discover More Amazing Products
                   </h3>
                   <p className="text-gray-600 mb-6 max-w-md">
                     Explore our complete collection of handcrafted delicacies and traditional favorites
                   </p>
                   <Link to="/shop">
-                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                    <Button className="bg-black hover:bg-gray-800 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                       <span className="mr-2">Explore All Products</span>
                       <ArrowRight className="h-5 w-5" />
                     </Button>
@@ -273,10 +292,10 @@ const FeaturedProducts = () => {
           </>
         ) : (
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-6">
-              <Sparkles className="h-12 w-12 text-purple-400" />
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-6">
+              <Sparkles className="h-12 w-12 text-gray-400" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">No Featured Products Yet</h3>
+            <h3 className="text-2xl font-bold text-black mb-4">No Featured Products Yet</h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
               We're curating the perfect selection of signature products for you. Check back soon!
             </p>

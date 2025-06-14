@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -277,8 +278,8 @@ const ProductManagement = () => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <main className="w-full py-6 px-4">
+        <div className="w-full">
           <Tabs defaultValue="orders" className="space-y-6">
             <TabsList>
               <TabsTrigger value="orders">Orders</TabsTrigger>

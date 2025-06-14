@@ -1,4 +1,3 @@
-
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,6 +43,7 @@ const Product = () => {
   const fetchProduct = async () => {
     try {
       setLoading(true);
+      console.log('Fetching product with ID:', id);
       
       // First try to fetch by ID
       let { data, error } = await supabase
@@ -55,6 +55,7 @@ const Product = () => {
 
       // If not found by ID, try to fetch by slug (name converted to slug format)
       if (error && error.code === 'PGRST116') {
+        console.log('Product not found by ID, trying to fetch by slug...');
         const { data: allProducts, error: allError } = await supabase
           .from('products')
           .select('*')
@@ -64,10 +65,12 @@ const Product = () => {
           // Find product by slug match
           const matchedProduct = allProducts.find(p => {
             const slug = p.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            console.log(`Comparing slug "${slug}" with "${id}"`);
             return slug === id;
           });
           
           if (matchedProduct) {
+            console.log('Found product by slug:', matchedProduct.name);
             data = matchedProduct;
             error = null;
           }
@@ -78,6 +81,7 @@ const Product = () => {
         console.error('Error fetching product:', error);
         setProduct(null);
       } else {
+        console.log('Product fetched successfully:', data);
         setProduct(data);
       }
     } catch (error) {
@@ -392,7 +396,7 @@ const Product = () => {
                         <span className="font-medium text-black capitalize">
                           {key.replace(/_/g, ' ')}:
                         </span>
-                        <span className="text-gray-700">{value}</span>
+                        <span className="text-gray-700">{String(value)}</span>
                       </div>
                     ))}
                   </div>

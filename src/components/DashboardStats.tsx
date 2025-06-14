@@ -1,12 +1,14 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingBag, Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardStatsProps {
   orders: any[];
 }
 
 const DashboardStats = ({ orders }: DashboardStatsProps) => {
+  const isMobile = useIsMobile();
   const totalOrders = orders.length;
   const deliveredOrders = orders.filter(order => order.shipping_status === 'delivered').length;
   const pendingOrders = orders.filter(order => order.shipping_status === 'pending').length;
@@ -25,7 +27,8 @@ const DashboardStats = ({ orders }: DashboardStatsProps) => {
       icon: ShoppingBag,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      description: 'All time orders'
+      description: 'All time orders',
+      gradient: 'from-blue-500 to-blue-600'
     },
     {
       title: 'Delivered',
@@ -33,7 +36,8 @@ const DashboardStats = ({ orders }: DashboardStatsProps) => {
       icon: CheckCircle,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
-      description: 'Successfully delivered'
+      description: 'Successfully delivered',
+      gradient: 'from-green-500 to-green-600'
     },
     {
       title: 'In Transit',
@@ -41,7 +45,8 @@ const DashboardStats = ({ orders }: DashboardStatsProps) => {
       icon: Truck,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
-      description: 'Currently shipping'
+      description: 'Currently shipping',
+      gradient: 'from-purple-500 to-purple-600'
     },
     {
       title: 'Pending',
@@ -49,15 +54,17 @@ const DashboardStats = ({ orders }: DashboardStatsProps) => {
       icon: Clock,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
-      description: 'Awaiting processing'
+      description: 'Awaiting processing',
+      gradient: 'from-orange-500 to-orange-600'
     },
     {
       title: 'Total Spent',
-      value: `₹${totalSpent}`,
+      value: `₹${totalSpent.toLocaleString()}`,
       icon: Package,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-100',
-      description: 'Lifetime spending'
+      description: 'Lifetime spending',
+      gradient: 'from-indigo-500 to-indigo-600'
     },
     {
       title: 'Cancelled',
@@ -65,27 +72,42 @@ const DashboardStats = ({ orders }: DashboardStatsProps) => {
       icon: XCircle,
       color: 'text-red-600',
       bgColor: 'bg-red-100',
-      description: 'Cancelled orders'
+      description: 'Cancelled orders',
+      gradient: 'from-red-500 to-red-600'
     }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className={`grid gap-3 sm:gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6'}`}>
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={index} className="hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`h-5 w-5 ${stat.color}`} />
+          <Card 
+            key={index} 
+            className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:-translate-y-1 cursor-pointer animate-fade-in hover-scale"
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            <CardContent className={`p-3 sm:p-4 ${isMobile ? 'space-y-2' : 'space-y-3'}`}>
+              <div className="flex items-start justify-between">
+                <div className={`p-2 sm:p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
                 </div>
-                <div>
-                  <div className="text-lg font-bold text-gray-900">{stat.value}</div>
-                  <div className="text-xs text-gray-500">{stat.title}</div>
+                {!isMobile && (
+                  <div className={`w-2 h-8 rounded-full bg-gradient-to-b ${stat.gradient} opacity-20 group-hover:opacity-40 transition-opacity duration-300`} />
+                )}
+              </div>
+              
+              <div className="space-y-1">
+                <div className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900 group-hover:text-gray-800 transition-colors`}>
+                  {stat.value}
+                </div>
+                <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-700`}>
+                  {stat.title}
+                </div>
+                <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 ${isMobile ? 'line-clamp-1' : ''}`}>
+                  {stat.description}
                 </div>
               </div>
-              <div className="text-xs text-gray-400 mt-2">{stat.description}</div>
             </CardContent>
           </Card>
         );

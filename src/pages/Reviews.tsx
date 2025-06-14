@@ -1,75 +1,33 @@
+
 import { useState } from 'react';
 import Layout from '../components/Layout';
 import TestimonialCard from '../components/TestimonialCard';
 import ReviewForm from '../components/ReviewForm';
 import ReviewsList from '../components/ReviewsList';
+import FeaturedProducts from '../components/FeaturedProducts';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Reviews = () => {
   const [activeTab, setActiveTab] = useState<'testimonials' | 'customer-reviews'>('testimonials');
   const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const handleReviewSubmitted = () => {
     setReviewsRefreshTrigger(prev => prev + 1);
     setShowReviewForm(false);
   };
 
-  const reviews = [
-    {
-      name: 'Priya Sharma',
-      rating: 5,
-      comment: 'The chicken pickle is absolutely divine! It tastes exactly like my grandmother used to make in Manipur. The authentic flavors brought back so many childhood memories. Ordered 5 jars at once!',
-      location: 'Mumbai, Maharashtra',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face'
-    },
-    {
-      name: 'Rajesh Kumar',
-      rating: 5,
-      comment: 'Outstanding quality! I ordered the fermented fish and it was perfectly seasoned. The packaging was excellent and delivery was prompt. My wife who is from Manipur was amazed by the authenticity.',
-      location: 'Delhi, India',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'
-    },
-    {
-      name: 'Anita Devi',
-      rating: 5,
-      comment: 'Finally found authentic Manipuri food online! The spice blend is perfect and you can taste the traditional preparation methods. The bamboo shoot pickle is my favorite. Will definitely order again.',
-      location: 'Bangalore, Karnataka',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face'
-    },
-    {
-      name: 'Suresh Patel',
-      rating: 5,
-      comment: 'Being away from Northeast, I was craving authentic Manipuri flavors. Momsgoogoo Foods delivered exactly what I needed. The dry chilli chutney is absolutely perfect with rice.',
-      location: 'Ahmedabad, Gujarat',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face'
-    },
-    {
-      name: 'Kavita Singh',
-      rating: 5,
-      comment: 'My daughter studies in Delhi and she was missing home food. I ordered multiple items for her and she said they taste just like home. Thank you for maintaining the authentic flavors!',
-      location: 'Imphal, Manipur',
-      image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face'
-    },
-    {
-      name: 'Arun Thapa',
-      rating: 5,
-      comment: 'The spicy soybean crisp is addictive! I shared it with my friends and now everyone is asking where to buy it. Great taste and excellent quality. Highly recommend to everyone.',
-      location: 'Kolkata, West Bengal',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face'
+  const handleWriteReview = () => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+      return;
     }
-  ];
-
-  const instagramPhotos = [
-    'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=300&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=300&h=300&fit=crop'
-  ];
-
-  const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+    setShowReviewForm(true);
+  };
 
   return (
     <Layout>
@@ -92,14 +50,14 @@ const Reviews = () => {
               variant={activeTab === 'testimonials' ? 'default' : 'outline'}
               className={activeTab === 'testimonials' ? 'bg-black text-white' : ''}
             >
-              Featured Testimonials
+              Customer Reviews
             </Button>
             <Button
               onClick={() => setActiveTab('customer-reviews')}
               variant={activeTab === 'customer-reviews' ? 'default' : 'outline'}
               className={activeTab === 'customer-reviews' ? 'bg-black text-white' : ''}
             >
-              Customer Reviews
+              Write a Review
             </Button>
           </div>
         </div>
@@ -107,51 +65,15 @@ const Reviews = () => {
 
       {activeTab === 'testimonials' ? (
         <>
-          {/* Rating Summary */}
+          {/* Reviews from Database */}
           <section className="py-16 bg-white">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-12">
-                <div className="inline-flex items-center bg-yellow-50 px-6 py-4 rounded-lg">
-                  <div className="flex text-yellow-400 text-2xl mr-4">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className={i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}>
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-800">{averageRating.toFixed(1)}/5</div>
-                    <div className="text-sm text-gray-600">Based on {reviews.length} reviews</div>
-                  </div>
-                </div>
-              </div>
+              <ReviewsList 
+                refreshTrigger={reviewsRefreshTrigger}
+              />
 
-              {/* Reviews Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-                {reviews.map((review, index) => (
-                  <TestimonialCard key={index} {...review} />
-                ))}
-              </div>
-
-              {/* Instagram Photos Section */}
-              <div className="text-center mb-12">
-                <h3 className="text-2xl font-bold text-black mb-6">Follow us on Instagram</h3>
-                <p className="text-gray-600 mb-8">See how our customers enjoy Momsgoogoo Foods</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                  {instagramPhotos.map((photo, index) => (
-                    <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                      <img 
-                        src={photo} 
-                        alt={`Customer photo ${index + 1}`}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Leave a Review Call-to-Action */}
-              <div className="text-center">
+              {/* Write Review Call-to-Action */}
+              <div className="text-center mt-12">
                 <div className="bg-gray-50 p-8 rounded-lg max-w-2xl mx-auto border border-gray-200">
                   <h3 className="text-2xl font-bold text-black mb-4">Share Your Experience</h3>
                   <p className="text-gray-600 mb-6">
@@ -160,48 +82,68 @@ const Reviews = () => {
                     make informed decisions.
                   </p>
                   <button 
-                    onClick={() => setShowReviewForm(true)}
+                    onClick={handleWriteReview}
                     className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
                   >
-                    Write a Review
+                    {isAuthenticated ? 'Write a Review' : 'Sign In to Write a Review'}
                   </button>
                 </div>
               </div>
             </div>
           </section>
+
+          {/* Signature Products Section */}
+          <section className="py-16 bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-black mb-4">Our Signature Products</h2>
+                <p className="text-gray-600 max-w-2xl mx-auto">
+                  Try our most loved authentic Manipuri foods that customers rave about
+                </p>
+              </div>
+              <FeaturedProducts />
+            </div>
+          </section>
         </>
       ) : (
-        /* Customer Reviews Section */
+        /* Write Review Section */
         <section className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-black mb-4">Brand Reviews</h2>
+              <h2 className="text-3xl font-bold text-black mb-4">Write a Review</h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Read authentic reviews from our customers about Momsgoogoo Foods brand
+                Share your experience with Momsgoogoo Foods
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              {/* Reviews List */}
-              <div>
-                <ReviewsList 
-                  refreshTrigger={reviewsRefreshTrigger}
-                />
-              </div>
-
-              {/* Review Form */}
-              <div>
+            {isAuthenticated ? (
+              <div className="max-w-2xl mx-auto">
                 <ReviewForm 
                   onReviewSubmitted={handleReviewSubmitted}
                 />
               </div>
-            </div>
+            ) : (
+              <div className="text-center">
+                <div className="bg-gray-50 p-8 rounded-lg max-w-2xl mx-auto border border-gray-200">
+                  <h3 className="text-xl font-bold text-black mb-4">Sign In Required</h3>
+                  <p className="text-gray-600 mb-6">
+                    Please sign in to your account to write a review.
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/auth')}
+                    className="bg-black text-white hover:bg-gray-800"
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
 
-      {/* Review Form Modal/Overlay for testimonials tab */}
-      {showReviewForm && activeTab === 'testimonials' && (
+      {/* Review Form Modal for authenticated users on testimonials tab */}
+      {showReviewForm && activeTab === 'testimonials' && isAuthenticated && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">

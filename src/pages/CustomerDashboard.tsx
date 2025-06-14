@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { User, ShoppingBag, Package, Clock, LogOut, MapPin, Phone, Mail, Truck } from 'lucide-react';
+import { User, ShoppingBag, Package, Clock, LogOut, Truck } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ProfileEditForm from '@/components/ProfileEditForm';
 
 interface Order {
   id: string;
@@ -36,6 +37,7 @@ const CustomerDashboard = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -95,6 +97,14 @@ const CustomerDashboard = () => {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleEditToggle = () => {
+    setIsEditingProfile(!isEditingProfile);
+  };
+
+  const handleProfileSave = () => {
+    setIsEditingProfile(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -160,76 +170,12 @@ const CustomerDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
               {/* Account Information & Saved Address */}
-              <div className="lg:col-span-1 space-y-6">
-                {/* Account Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <User className="h-5 w-5" />
-                      <span>Account Information</span>
-                    </CardTitle>
-                    <CardDescription>Your personal details</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Email</label>
-                        <p className="text-gray-900">{user?.email}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Full Name</label>
-                      <p className="text-gray-900">{profile?.full_name || 'Not provided'}</p>
-                    </div>
-                    {profile?.phone && (
-                      <div className="flex items-center space-x-2">
-                        <Phone className="h-4 w-4 text-gray-500" />
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Phone</label>
-                          <p className="text-gray-900">{profile.phone}</p>
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Member Since</label>
-                      <p className="text-gray-900">
-                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Saved Address */}
-                {(profile?.address_line_1 || profile?.city) && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <MapPin className="h-5 w-5" />
-                        <span>Saved Address</span>
-                      </CardTitle>
-                      <CardDescription>Your default delivery address</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-1">
-                        {profile?.address_line_1 && (
-                          <p className="text-gray-900">{profile.address_line_1}</p>
-                        )}
-                        {profile?.address_line_2 && (
-                          <p className="text-gray-900">{profile.address_line_2}</p>
-                        )}
-                        {profile?.city && (
-                          <p className="text-gray-900">
-                            {profile.city}{profile?.state && `, ${profile.state}`}
-                          </p>
-                        )}
-                        {profile?.postal_code && (
-                          <p className="text-gray-900">{profile.postal_code}</p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+              <div className="lg:col-span-1">
+                <ProfileEditForm 
+                  isEditing={isEditingProfile}
+                  onEditToggle={handleEditToggle}
+                  onSave={handleProfileSave}
+                />
               </div>
 
               {/* Orders & Activity */}
@@ -315,7 +261,7 @@ const CustomerDashboard = () => {
                                     )}
                                     {order.courier_contact && (
                                       <div className="flex items-center space-x-2">
-                                        <Phone className="h-3 w-3 text-gray-500" />
+                                        <span className="text-gray-500">Contact:</span>
                                         <span>{order.courier_contact}</span>
                                       </div>
                                     )}

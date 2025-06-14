@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuthContext';
@@ -84,7 +83,7 @@ const Shop = () => {
 
     // Add to cart and then navigate to checkout
     await addToCart(product.id, quantities[product.id] || 1);
-    setCartOpen(true);
+    navigate('/checkout');
   };
 
   const handleAddToCart = async (product: Product) => {

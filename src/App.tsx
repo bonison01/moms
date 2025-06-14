@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import ProductManagement from "./pages/ProductManagement";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/customer-dashboard" element={<CustomerDashboard />} />
                 <Route path="/admin" element={<ProductManagement />} />
                 <Route path="/admin/products" element={<ProductManagement />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

@@ -130,7 +130,10 @@ export type Database = {
       orders: {
         Row: {
           created_at: string | null
+          delivery_address: Json | null
           id: string
+          payment_method: string | null
+          phone: string | null
           status: string
           total_amount: number
           updated_at: string | null
@@ -138,7 +141,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          delivery_address?: Json | null
           id?: string
+          payment_method?: string | null
+          phone?: string | null
           status?: string
           total_amount: number
           updated_at?: string | null
@@ -146,7 +152,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          delivery_address?: Json | null
           id?: string
+          payment_method?: string | null
+          phone?: string | null
           status?: string
           total_amount?: number
           updated_at?: string | null
@@ -207,27 +216,45 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_line_1: string | null
+          address_line_2: string | null
+          city: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          phone: string | null
+          postal_code: string | null
           role: string
+          state: string | null
           updated_at: string
         }
         Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          phone?: string | null
+          postal_code?: string | null
           role?: string
+          state?: string | null
           updated_at?: string
         }
         Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          phone?: string | null
+          postal_code?: string | null
           role?: string
+          state?: string | null
           updated_at?: string
         }
         Relationships: []

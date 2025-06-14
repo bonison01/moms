@@ -1,11 +1,9 @@
 
-import { useState } from 'react';
 import { X, Plus, Minus, ShoppingCart, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCartContext';
 import { useAuth } from '@/hooks/useAuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -15,8 +13,7 @@ interface CartSidebarProps {
 const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const { cartItems, updateCartItemQuantity, removeFromCart, clearCart, getTotalAmount } = useCart();
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [processingOrder, setProcessingOrder] = useState(false);
+  const navigate = useNavigate();
 
   const handleQuantityChange = (cartItemId: string, newQuantity: number) => {
     if (newQuantity > 0) {
@@ -24,69 +21,11 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!user || cartItems.length === 0) return;
-
-    try {
-      setProcessingOrder(true);
-      console.log('Processing checkout for user:', user.id);
-
-      const totalAmount = getTotalAmount();
-
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          total_amount: totalAmount,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (orderError) {
-        console.error('Error creating order:', orderError);
-        throw orderError;
-      }
-
-      console.log('Order created:', order.id);
-
-      // Create order items
-      const orderItems = cartItems.map(item => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.product.price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error('Error creating order items:', itemsError);
-        throw itemsError;
-      }
-
-      // Clear cart after successful order
-      await clearCart();
-      onClose();
-
-      toast({
-        title: "Order Placed Successfully",
-        description: `Order #${order.id.slice(0, 8)} has been placed for ₹${totalAmount}`,
-      });
-
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      toast({
-        title: "Checkout Failed",
-        description: "There was an error processing your order. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setProcessingOrder(false);
-    }
+    
+    onClose();
+    navigate('/checkout');
   };
 
   if (!isOpen) return null;
@@ -170,10 +109,9 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
               <div className="space-y-2">
                 <Button
                   onClick={handleCheckout}
-                  disabled={processingOrder}
                   className="w-full bg-black text-white hover:bg-gray-800"
                 >
-                  {processingOrder ? 'Processing...' : 'Checkout'}
+                  Proceed to Checkout
                 </Button>
                 
                 <Button

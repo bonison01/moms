@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash, Save, X, Package, LogOut, Home } from 'lucide-react';
 import OrderManagement from '@/components/OrderManagement';
+import ImageUpload from '@/components/ImageUpload';
 
 interface Product {
   id: string;
@@ -34,7 +35,9 @@ const ProductManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingImages, setEditingImages] = useState<string[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [newProductImages, setNewProductImages] = useState<string[]>([]);
   const [newProduct, setNewProduct] = useState<Omit<Product, 'id'>>({
     name: '',
     description: null,
@@ -99,10 +102,14 @@ const ProductManagement = () => {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
+    // Parse existing images - handle both single image_url and potential array
+    const existingImages = product.image_url ? [product.image_url] : [];
+    setEditingImages(existingImages);
   };
 
   const handleCancelEdit = () => {
     setEditingProduct(null);
+    setEditingImages([]);
   };
 
   const handleDelete = async (id: string) => {
@@ -135,15 +142,22 @@ const ProductManagement = () => {
 
   const handleUpdate = async (updatedProduct: Product) => {
     try {
+      // Use the first image as the main image_url for backward compatibility
+      const productData = {
+        ...updatedProduct,
+        image_url: editingImages.length > 0 ? editingImages[0] : null,
+      };
+
       const { error } = await supabase
         .from('products')
-        .update(updatedProduct)
+        .update(productData)
         .eq('id', updatedProduct.id);
 
       if (error) throw error;
 
-      setProducts(products.map((product) => (product.id === updatedProduct.id ? updatedProduct : product)));
+      setProducts(products.map((product) => (product.id === updatedProduct.id ? productData : product)));
       setEditingProduct(null);
+      setEditingImages([]);
       toast({
         title: "Success",
         description: "Product updated successfully",
@@ -174,15 +188,21 @@ const ProductManagement = () => {
 
   const handleCreate = async () => {
     try {
+      const productData = {
+        ...newProduct,
+        image_url: newProductImages.length > 0 ? newProductImages[0] : null,
+      };
+
       const { data, error } = await supabase
         .from('products')
-        .insert([newProduct])
+        .insert([productData])
         .select();
 
       if (error) throw error;
 
       setProducts([...products, data[0]]);
       setIsCreating(false);
+      setNewProductImages([]);
       setNewProduct({
         name: '',
         description: null,
@@ -312,13 +332,13 @@ const ProductManagement = () => {
           {/* Edit Product Modal */}
           {editingProduct && (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-              <div className="relative p-4 w-full max-w-md h-full md:h-auto">
-                <Card className="relative">
+              <div className="relative p-4 w-full max-w-2xl h-full md:h-auto">
+                <Card className="relative max-h-screen overflow-y-auto">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleCancelEdit}
-                    className="absolute top-2 right-2"
+                    className="absolute top-2 right-2 z-10"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -328,6 +348,12 @@ const ProductManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4">
+                      <ImageUpload
+                        images={editingImages}
+                        onImagesChange={setEditingImages}
+                        maxImages={5}
+                        maxSizePerImageMB={2}
+                      />
                       <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <Input
@@ -367,13 +393,16 @@ const ProductManagement = () => {
           {/* Create Product Modal */}
           {isCreating && (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-              <div className="relative p-4 w-full max-w-md h-full md:h-auto">
-                <Card className="relative">
+              <div className="relative p-4 w-full max-w-2xl h-full md:h-auto">
+                <Card className="relative max-h-screen overflow-y-auto">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setIsCreating(false)}
-                    className="absolute top-2 right-2"
+                    onClick={() => {
+                      setIsCreating(false);
+                      setNewProductImages([]);
+                    }}
+                    className="absolute top-2 right-2 z-10"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -383,6 +412,12 @@ const ProductManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4">
+                      <ImageUpload
+                        images={newProductImages}
+                        onImagesChange={setNewProductImages}
+                        maxImages={5}
+                        maxSizePerImageMB={2}
+                      />
                       <div className="space-y-2">
                         <Label htmlFor="new-name">Name</Label>
                         <Input
@@ -408,16 +443,6 @@ const ProductManagement = () => {
                           type="number"
                           name="price"
                           value={newProduct.price}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new-image_url">Image URL</Label>
-                        <Input
-                          id="new-image_url"
-                          type="text"
-                          name="image_url"
-                          value={newProduct.image_url || ''}
                           onChange={handleInputChange}
                         />
                       </div>

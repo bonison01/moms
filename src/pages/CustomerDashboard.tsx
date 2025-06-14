@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -167,11 +166,11 @@ const CustomerDashboard = () => {
         <Navbar />
         <main className="flex-grow">
           <div className="bg-white shadow-sm border-b">
-            <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-6 gap-3">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3">
                 <div className="min-w-0 flex-1">
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Order Details</h1>
-                  <p className="text-gray-600 mt-1 text-xs sm:text-sm lg:text-base">Detailed information about your order</p>
+                  <p className="text-gray-600 mt-1 text-sm sm:text-base">Detailed information about your order</p>
                 </div>
                 <Button 
                   onClick={handleSignOut} 
@@ -179,13 +178,13 @@ const CustomerDashboard = () => {
                   size={isMobile ? "sm" : "default"}
                   className="w-full sm:w-auto"
                 >
-                  <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="text-xs sm:text-sm">Sign Out</span>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Sign Out</span>
                 </Button>
               </div>
             </div>
           </div>
-          <div className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8">
+          <div className="w-full py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <OrderDetails 
               orderId={selectedOrderId} 
               onBack={handleBackToDashboard}
@@ -201,14 +200,14 @@ const CustomerDashboard = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       
-      <main className="flex-grow">
+      <main className="flex-grow w-full">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 sm:py-6 gap-3">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-3">
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">My Account</h1>
-                <p className="text-gray-600 mt-1 text-xs sm:text-sm lg:text-base truncate">
+                <p className="text-gray-600 mt-1 text-sm sm:text-base truncate">
                   Welcome back, {profile?.full_name || user?.email}
                 </p>
               </div>
@@ -220,8 +219,8 @@ const CustomerDashboard = () => {
                   disabled={refreshing}
                   className="w-full sm:w-auto"
                 >
-                  <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  <span className="text-xs sm:text-sm">Refresh</span>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                  <span>Refresh</span>
                 </Button>
                 <Button 
                   onClick={handleSignOut} 
@@ -229,8 +228,8 @@ const CustomerDashboard = () => {
                   size={isMobile ? "sm" : "default"}
                   className="w-full sm:w-auto"
                 >
-                  <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="text-xs sm:text-sm">Sign Out</span>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Sign Out</span>
                 </Button>
               </div>
             </div>
@@ -238,16 +237,16 @@ const CustomerDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto py-3 sm:py-6 px-3 sm:px-6 lg:px-8">
+        <div className="w-full py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
           {/* Dashboard Stats */}
-          <div className="mb-4 sm:mb-6 lg:mb-8">
+          <div className="mb-6 lg:mb-8 w-full">
             <DashboardStats orders={orders} />
           </div>
 
-          <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-3 gap-6 lg:gap-8'}`}>
+          <div className={`w-full ${isMobile ? 'space-y-6' : 'grid lg:grid-cols-4 gap-6 lg:gap-8'}`}>
             
             {/* Account Information & Saved Address */}
-            <div className={`${isMobile ? 'order-2' : 'lg:col-span-1'}`}>
+            <div className={`${isMobile ? 'order-2' : 'lg:col-span-1'} w-full`}>
               <div className="sticky top-4">
                 <ProfileEditForm 
                   isEditing={isEditingProfile}
@@ -258,23 +257,23 @@ const CustomerDashboard = () => {
             </div>
 
             {/* Orders & Activity */}
-            <div className={`${isMobile ? 'order-1' : 'lg:col-span-2'} space-y-4 sm:space-y-6`}>
+            <div className={`${isMobile ? 'order-1' : 'lg:col-span-3'} space-y-6 w-full`}>
               
               {/* Featured Products Section */}
-              <div className="animate-fade-in">
+              <div className="animate-fade-in w-full">
                 <FeaturedProducts />
               </div>
               
               {/* Orders Section */}
-              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
-                <CardHeader className="pb-3 sm:pb-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in w-full">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="flex items-center space-x-2 text-base sm:text-lg lg:text-xl">
-                        <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                      <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                        <ShoppingBag className="h-5 w-5 text-blue-600 flex-shrink-0" />
                         <span className="truncate">Your Orders</span>
                       </CardTitle>
-                      <CardDescription className="text-xs sm:text-sm lg:text-base">
+                      <CardDescription className="text-sm sm:text-base">
                         Your order history and shipping status
                       </CardDescription>
                     </div>
@@ -282,20 +281,20 @@ const CustomerDashboard = () => {
 
                   {/* Search and Filter Controls */}
                   {orders.length > 0 && (
-                    <div className="flex flex-col gap-2 sm:gap-3 mt-3 sm:mt-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
+                    <div className="flex flex-col gap-3 mt-4 w-full">
+                      <div className="relative w-full">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <Input
                           placeholder={isMobile ? "Search orders..." : "Search orders by ID or product name..."}
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-8 sm:pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs sm:text-sm"
+                          className="pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 w-full"
                         />
                       </div>
-                      <div className="w-full sm:w-48">
+                      <div className="w-full sm:w-64">
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs sm:text-sm">
-                            <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-gray-500 flex-shrink-0" />
+                          <SelectTrigger className="bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 w-full">
+                            <Filter className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
                             <SelectValue placeholder="Filter by status" />
                           </SelectTrigger>
                           <SelectContent className="bg-white border-gray-200 shadow-lg">
@@ -311,20 +310,20 @@ const CustomerDashboard = () => {
                     </div>
                   )}
                 </CardHeader>
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 w-full overflow-hidden">
                   {loading ? (
-                    <div className="text-center py-8 sm:py-12">
-                      <div className="inline-flex items-center px-3 sm:px-4 py-2 text-gray-500">
-                        <RefreshCw className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                        <span className="text-xs sm:text-sm">Loading orders...</span>
+                    <div className="text-center py-12">
+                      <div className="inline-flex items-center px-4 py-2 text-gray-500">
+                        <RefreshCw className="animate-spin h-5 w-5 mr-2" />
+                        <span>Loading orders...</span>
                       </div>
                     </div>
                   ) : filteredOrders.length > 0 ? (
-                    <div className="space-y-3 sm:space-y-4">
+                    <div className="space-y-4 w-full">
                       {filteredOrders.map((order, index) => (
                         <div 
                           key={order.id} 
-                          className="animate-fade-in hover-scale"
+                          className="animate-fade-in hover-scale w-full"
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <OrderCard
@@ -336,16 +335,16 @@ const CustomerDashboard = () => {
                       
                       {/* Show filtered results info */}
                       {filteredOrders.length !== orders.length && (
-                        <div className="text-center py-3 sm:py-4 text-xs sm:text-sm text-gray-500 bg-blue-50 rounded-lg">
+                        <div className="text-center py-4 text-sm text-gray-500 bg-blue-50 rounded-lg">
                           Showing {filteredOrders.length} of {orders.length} orders
                         </div>
                       )}
                     </div>
                   ) : orders.length > 0 ? (
-                    <div className="text-center py-8 sm:py-12">
-                      <ShoppingBag className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
-                      <h3 className="text-sm sm:text-lg font-medium text-gray-900 mb-2">No orders match your filters</h3>
-                      <p className="text-gray-500 mb-3 sm:mb-4 text-xs sm:text-base px-4">
+                    <div className="text-center py-12">
+                      <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No orders match your filters</h3>
+                      <p className="text-gray-500 mb-4 px-4">
                         Try adjusting your search or filter criteria
                       </p>
                       <Button 
@@ -355,24 +354,22 @@ const CustomerDashboard = () => {
                           setStatusFilter('all');
                         }}
                         className="hover-scale"
-                        size={isMobile ? "sm" : "default"}
                       >
-                        <span className="text-xs sm:text-sm">Clear Filters</span>
+                        Clear Filters
                       </Button>
                     </div>
                   ) : (
-                    <div className="text-center py-8 sm:py-12">
-                      <ShoppingBag className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
-                      <h3 className="text-sm sm:text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-                      <p className="text-gray-500 mb-3 sm:mb-4 text-xs sm:text-base px-4">
+                    <div className="text-center py-12">
+                      <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+                      <p className="text-gray-500 mb-4 px-4">
                         Start shopping to see your orders here
                       </p>
                       <Button 
                         onClick={() => navigate('/shop')}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover-scale"
-                        size={isMobile ? "sm" : "default"}
                       >
-                        <span className="text-xs sm:text-sm">Browse Products</span>
+                        Browse Products
                       </Button>
                     </div>
                   )}

@@ -9,7 +9,7 @@ import { LogIn, User, Shield } from 'lucide-react';
  * Shows different states based on user authentication status
  */
 const AuthButton = () => {
-  const { isAuthenticated, isAdmin, profile, loading } = useAuth();
+  const { isAuthenticated, isAdmin, profile, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
   // Don't show anything while loading

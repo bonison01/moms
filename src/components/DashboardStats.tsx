@@ -78,7 +78,7 @@ const DashboardStats = ({ orders }: DashboardStatsProps) => {
   ];
 
   return (
-    <div className={`grid gap-3 sm:gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6'}`}>
+    <div className={`grid gap-2 sm:gap-3 lg:gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'}`}>
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
@@ -87,24 +87,24 @@ const DashboardStats = ({ orders }: DashboardStatsProps) => {
             className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:-translate-y-1 cursor-pointer animate-fade-in hover-scale"
             style={{ animationDelay: `${index * 0.1}s` }}
           >
-            <CardContent className={`p-3 sm:p-4 ${isMobile ? 'space-y-2' : 'space-y-3'}`}>
+            <CardContent className={`p-2 sm:p-3 lg:p-4 ${isMobile ? 'space-y-1' : 'space-y-2 sm:space-y-3'}`}>
               <div className="flex items-start justify-between">
-                <div className={`p-2 sm:p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
+                <div className={`p-1.5 sm:p-2 lg:p-3 rounded-lg sm:rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className={`h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 ${stat.color}`} />
                 </div>
                 {!isMobile && (
-                  <div className={`w-2 h-8 rounded-full bg-gradient-to-b ${stat.gradient} opacity-20 group-hover:opacity-40 transition-opacity duration-300`} />
+                  <div className={`w-1.5 sm:w-2 h-6 sm:h-8 rounded-full bg-gradient-to-b ${stat.gradient} opacity-20 group-hover:opacity-40 transition-opacity duration-300`} />
                 )}
               </div>
               
-              <div className="space-y-1">
-                <div className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900 group-hover:text-gray-800 transition-colors`}>
+              <div className="space-y-0.5 sm:space-y-1">
+                <div className={`${isMobile ? 'text-sm' : 'text-lg sm:text-xl'} font-bold text-gray-900 group-hover:text-gray-800 transition-colors leading-tight`}>
                   {stat.value}
                 </div>
-                <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-700`}>
+                <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-700 leading-tight`}>
                   {stat.title}
                 </div>
-                <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 ${isMobile ? 'line-clamp-1' : ''}`}>
+                <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 leading-tight ${isMobile ? 'line-clamp-1' : ''}`}>
                   {stat.description}
                 </div>
               </div>

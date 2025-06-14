@@ -271,6 +271,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setProfileLoading(false);
       
       console.log('✅ User signed out successfully');
+      
+      // Navigate to home page after successful sign out
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     } catch (error) {
       console.error('💥 Sign out exception:', error);
     }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +13,7 @@ import ProfileEditForm from '@/components/ProfileEditForm';
 import OrderCard from '@/components/OrderCard';
 import OrderDetails from '@/components/OrderDetails';
 import DashboardStats from '@/components/DashboardStats';
+import FeaturedProducts from '@/components/FeaturedProducts';
 
 interface Order {
   id: string;

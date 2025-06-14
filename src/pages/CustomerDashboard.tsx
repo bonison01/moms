@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,13 +11,15 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ProfileEditForm from '@/components/ProfileEditForm';
 import OrderCard from '@/components/OrderCard';
 import OrderDetails from '@/components/OrderDetails';
 import DashboardStats from '@/components/DashboardStats';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import UserReviews from '@/components/UserReviews';
 import ReviewForm from '@/components/ReviewForm';
+import DashboardNavigation from '@/components/DashboardNavigation';
+import AccountInfo from '@/components/AccountInfo';
+import SavedAddress from '@/components/SavedAddress';
 
 interface Order {
   id: string;
@@ -53,12 +54,12 @@ const CustomerDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentView, setCurrentView] = useState<'dashboard' | 'orderDetails'>('dashboard');
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [activeSection, setActiveSection] = useState('account');
 
   useEffect(() => {
     if (user) {
@@ -134,11 +135,11 @@ const CustomerDashboard = () => {
   };
 
   const handleEditToggle = () => {
-    setIsEditingProfile(!isEditingProfile);
+    
   };
 
   const handleProfileSave = () => {
-    setIsEditingProfile(false);
+    
   };
 
   const handleViewOrderDetails = (orderId: string) => {
@@ -157,6 +158,10 @@ const CustomerDashboard = () => {
 
   const handleReviewSubmitted = () => {
     setShowReviewForm(false);
+  };
+
+  const handleViewChange = (view: string) => {
+    setActiveSection(view);
   };
 
   // Filter orders based on search term and status filter
@@ -208,6 +213,131 @@ const CustomerDashboard = () => {
     );
   }
 
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case 'account':
+        return <AccountInfo />;
+      case 'address':
+        return <SavedAddress />;
+      case 'reviews':
+        return <UserReviews onWriteReview={handleWriteReview} />;
+      case 'orders':
+      default:
+        return (
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                    <ShoppingBag className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <span className="truncate">Your Orders</span>
+                  </CardTitle>
+                  <CardDescription className="text-sm sm:text-base">
+                    Your order history and shipping status
+                  </CardDescription>
+                </div>
+              </div>
+
+              {/* Search and Filter Controls */}
+              {orders.length > 0 && (
+                <div className="flex flex-col gap-3 mt-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder={isMobile ? "Search orders..." : "Search orders by ID or product name..."}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                    />
+                  </div>
+                  <div className="w-full sm:w-64">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
+                        <Filter className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 shadow-lg">
+                        <SelectItem value="all">All Orders</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="shipped">Shipped</SelectItem>
+                        <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </CardHeader>
+            <CardContent className="pt-0 overflow-hidden">
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="inline-flex items-center px-4 py-2 text-gray-500">
+                    <RefreshCw className="animate-spin h-5 w-5 mr-2" />
+                    <span>Loading orders...</span>
+                  </div>
+                </div>
+              ) : filteredOrders.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredOrders.map((order, index) => (
+                    <div 
+                      key={order.id} 
+                      className="animate-fade-in hover-scale"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <OrderCard
+                        order={order}
+                        onViewDetails={handleViewOrderDetails}
+                      />
+                    </div>
+                  ))}
+                  
+                  {/* Show filtered results info */}
+                  {filteredOrders.length !== orders.length && (
+                    <div className="text-center py-4 text-sm text-gray-500 bg-blue-50 rounded-lg">
+                      Showing {filteredOrders.length} of {orders.length} orders
+                    </div>
+                  )}
+                </div>
+              ) : orders.length > 0 ? (
+                <div className="text-center py-12">
+                  <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No orders match your filters</h3>
+                  <p className="text-gray-500 mb-4 px-4">
+                    Try adjusting your search or filter criteria
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                    }}
+                    className="hover-scale"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+                  <p className="text-gray-500 mb-4 px-4">
+                    Start shopping to see your orders here
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/shop')}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover-scale"
+                  >
+                    Browse Products
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
@@ -248,14 +378,14 @@ const CustomerDashboard = () => {
           </div>
         </div>
 
-        {/* Main Content - Fullscreen */}
+        {/* Main Content */}
         <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-          {/* Dashboard Stats - Fullscreen */}
+          {/* Dashboard Stats */}
           <div className="mb-6 lg:mb-8">
             <DashboardStats orders={orders} />
           </div>
 
-          {/* Featured Products Section - Card Format */}
+          {/* Featured Products Section */}
           <div className="mb-6 lg:mb-8">
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
               <CardHeader className="pb-4">
@@ -285,135 +415,12 @@ const CustomerDashboard = () => {
             </Card>
           </div>
 
-          <div className={`${isMobile ? 'space-y-6' : 'grid lg:grid-cols-4 gap-6 lg:gap-8'}`}>
-            
-            {/* Account Information & Reviews */}
-            <div className={`${isMobile ? 'order-2' : 'lg:col-span-1'} space-y-6`}>
-              <div className="sticky top-4 space-y-6">
-                <ProfileEditForm 
-                  isEditing={isEditingProfile}
-                  onEditToggle={handleEditToggle}
-                  onSave={handleProfileSave}
-                />
-                <UserReviews onWriteReview={handleWriteReview} />
-              </div>
-            </div>
+          {/* Navigation */}
+          <DashboardNavigation currentView={activeSection} onViewChange={handleViewChange} />
 
-            {/* Orders & Activity - Fullscreen */}
-            <div className={`${isMobile ? 'order-1' : 'lg:col-span-3'} space-y-6`}>
-              
-              {/* Orders Section - Fullscreen */}
-              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-fade-in">
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-                        <ShoppingBag className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                        <span className="truncate">Your Orders</span>
-                      </CardTitle>
-                      <CardDescription className="text-sm sm:text-base">
-                        Your order history and shipping status
-                      </CardDescription>
-                    </div>
-                  </div>
-
-                  {/* Search and Filter Controls */}
-                  {orders.length > 0 && (
-                    <div className="flex flex-col gap-3 mt-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                        <Input
-                          placeholder={isMobile ? "Search orders..." : "Search orders by ID or product name..."}
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                        />
-                      </div>
-                      <div className="w-full sm:w-64">
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                            <Filter className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border-gray-200 shadow-lg">
-                            <SelectItem value="all">All Orders</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="shipped">Shipped</SelectItem>
-                            <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                            <SelectItem value="delivered">Delivered</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent className="pt-0 overflow-hidden">
-                  {loading ? (
-                    <div className="text-center py-12">
-                      <div className="inline-flex items-center px-4 py-2 text-gray-500">
-                        <RefreshCw className="animate-spin h-5 w-5 mr-2" />
-                        <span>Loading orders...</span>
-                      </div>
-                    </div>
-                  ) : filteredOrders.length > 0 ? (
-                    <div className="space-y-4">
-                      {filteredOrders.map((order, index) => (
-                        <div 
-                          key={order.id} 
-                          className="animate-fade-in hover-scale"
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                          <OrderCard
-                            order={order}
-                            onViewDetails={handleViewOrderDetails}
-                          />
-                        </div>
-                      ))}
-                      
-                      {/* Show filtered results info */}
-                      {filteredOrders.length !== orders.length && (
-                        <div className="text-center py-4 text-sm text-gray-500 bg-blue-50 rounded-lg">
-                          Showing {filteredOrders.length} of {orders.length} orders
-                        </div>
-                      )}
-                    </div>
-                  ) : orders.length > 0 ? (
-                    <div className="text-center py-12">
-                      <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No orders match your filters</h3>
-                      <p className="text-gray-500 mb-4 px-4">
-                        Try adjusting your search or filter criteria
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setSearchTerm('');
-                          setStatusFilter('all');
-                        }}
-                        className="hover-scale"
-                      >
-                        Clear Filters
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-                      <p className="text-gray-500 mb-4 px-4">
-                        Start shopping to see your orders here
-                      </p>
-                      <Button 
-                        onClick={() => navigate('/shop')}
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover-scale"
-                      >
-                        Browse Products
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+          {/* Dynamic Content */}
+          <div className="space-y-6">
+            {renderActiveSection()}
           </div>
         </div>
       </main>

@@ -1,26 +1,58 @@
 
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuthContext';
 import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import TestimonialCard from '../components/TestimonialCard';
 
+interface FeaturedProduct {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string | null;
+  description: string | null;
+}
+
 const Index = () => {
-  const featuredProducts = [
-    {
-      id: 'chicken-pickle',
-      name: 'Chicken Pickle',
-      price: '₹1,299',
-      image: '/lovable-uploads/5d3d1fda-566d-4288-867d-21ed4494e26f.png',
-      description: 'A product of Manipur - Just like homemade chicken pickle with traditional spices and authentic flavors.'
-    },
-    {
-      id: 'seasoned-fermented-fish',
-      name: 'Seasoned Fermented Fish',
-      price: '₹1,599',
-      image: '/lovable-uploads/b4742f71-5f91-4c9b-8dfa-88d0e668b696.png',
-      description: 'Ngari Angouba - Traditional seasoned fermented fish, roasted and ready to eat with authentic spices.'
+  const { isAuthenticated } = useAuth();
+  const [featuredProducts, setFeaturedProducts] = useState<FeaturedProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFeaturedProducts();
+  }, []);
+
+  const fetchFeaturedProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, image_url, description')
+        .eq('featured', true)
+        .eq('is_active', true)
+        .limit(4);
+
+      if (error) {
+        console.error('Error fetching featured products:', error);
+        return;
+      }
+
+      const formattedProducts = (data || []).map(product => ({
+        id: product.id,
+        name: product.name,
+        price: `₹${product.price}`,
+        image: product.image_url || '/placeholder.svg',
+        description: product.description || 'No description available'
+      }));
+
+      setFeaturedProducts(formattedProducts);
+    } catch (error) {
+      console.error('Error fetching featured products:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const testimonials = [
     {
@@ -79,39 +111,41 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Customer Login Section */}
-      <section className="py-12 bg-blue-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-            Already a Customer?
-          </h2>
-          <p className="text-lg text-gray-600 mb-6">
-            Sign in to your account to track orders, save favorites, and enjoy a personalized shopping experience.
-          </p>
-          <div className="space-x-4">
-            <Link
-              to="/auth"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-block"
-            >
-              Customer Login
-            </Link>
-            <Link
-              to="/auth"
-              className="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors inline-block"
-            >
-              Create Account
-            </Link>
+      {/* Customer Login Section - Only show if not authenticated */}
+      {!isAuthenticated && (
+        <section className="py-12 bg-blue-50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              Already a Customer?
+            </h2>
+            <p className="text-lg text-gray-600 mb-6">
+              Sign in to your account to track orders, save favorites, and enjoy a personalized shopping experience.
+            </p>
+            <div className="space-x-4">
+              <Link
+                to="/auth"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-block"
+              >
+                Customer Login
+              </Link>
+              <Link
+                to="/auth"
+                className="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors inline-block"
+              >
+                Create Account
+              </Link>
+            </div>
+            <div className="mt-4">
+              <Link
+                to="/auth?admin=true"
+                className="text-sm text-gray-500 hover:text-gray-700 underline"
+              >
+                Admin Login →
+              </Link>
+            </div>
           </div>
-          <div className="mt-4">
-            <Link
-              to="/auth?admin=true"
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
-            >
-              Admin Login →
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Featured Products */}
       <section className="py-16 bg-gray-50">
@@ -124,11 +158,24 @@ const Index = () => {
               Taste the difference that authentic ingredients and traditional methods make
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading featured products...</p>
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} {...product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No featured products available at the moment.</p>
+            </div>
+          )}
+          
           <div className="text-center mt-8">
             <Link
               to="/shop"

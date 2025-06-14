@@ -220,6 +220,9 @@ const CustomerDashboard = () => {
               {/* Orders & Activity */}
               <div className="lg:col-span-2 space-y-6">
                 
+                {/* Featured Products Section */}
+                <FeaturedProducts />
+                
                 {/* Orders Section */}
                 <Card>
                   <CardHeader>

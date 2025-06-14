@@ -38,30 +38,66 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
   };
 
   const handleSave = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "No user found. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       setSaving(true);
       console.log('Updating profile for user:', user.id);
       console.log('Profile data:', formData);
 
-      const { error } = await supabase
+      // Check if profile exists first
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .update({
-          full_name: formData.full_name.trim() || null,
-          phone: formData.phone.trim() || null,
-          address_line_1: formData.address_line_1.trim() || null,
-          address_line_2: formData.address_line_2.trim() || null,
-          city: formData.city.trim() || null,
-          state: formData.state.trim() || null,
-          postal_code: formData.postal_code.trim() || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+        .select('id')
+        .eq('id', user.id)
+        .single();
 
-      if (error) {
-        console.error('Error updating profile:', error);
-        throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking profile:', fetchError);
+        throw fetchError;
+      }
+
+      const profileData = {
+        full_name: formData.full_name.trim() || null,
+        phone: formData.phone.trim() || null,
+        address_line_1: formData.address_line_1.trim() || null,
+        address_line_2: formData.address_line_2.trim() || null,
+        city: formData.city.trim() || null,
+        state: formData.state.trim() || null,
+        postal_code: formData.postal_code.trim() || null,
+        updated_at: new Date().toISOString()
+      };
+
+      let result;
+      
+      if (existingProfile) {
+        // Update existing profile
+        result = await supabase
+          .from('profiles')
+          .update(profileData)
+          .eq('id', user.id);
+      } else {
+        // Create new profile
+        result = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            role: 'user',
+            ...profileData
+          });
+      }
+
+      if (result.error) {
+        console.error('Error saving profile:', result.error);
+        throw result.error;
       }
 
       await refreshProfile();
@@ -136,7 +172,7 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
                 placeholder="Enter your full name"
               />
             ) : (
-              <p className="text-gray-900">{profile?.full_name || 'Not provided'}</p>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded">{profile?.full_name || 'Not provided'}</p>
             )}
           </div>
           
@@ -150,13 +186,13 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
                 placeholder="Enter your phone number"
               />
             ) : (
-              <p className="text-gray-900">{profile?.phone || 'Not provided'}</p>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded">{profile?.phone || 'Not provided'}</p>
             )}
           </div>
           
           <div>
             <Label>Member Since</Label>
-            <p className="text-gray-900">
+            <p className="text-gray-900 bg-gray-50 p-2 rounded">
               {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}
             </p>
           </div>
@@ -183,7 +219,7 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
                 placeholder="Street address, building name"
               />
             ) : (
-              <p className="text-gray-900">{profile?.address_line_1 || 'Not provided'}</p>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded">{profile?.address_line_1 || 'Not provided'}</p>
             )}
           </div>
           
@@ -197,7 +233,7 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
                 placeholder="Apartment, suite, unit (optional)"
               />
             ) : (
-              <p className="text-gray-900">{profile?.address_line_2 || 'Not provided'}</p>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded">{profile?.address_line_2 || 'Not provided'}</p>
             )}
           </div>
           
@@ -212,7 +248,7 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
                   placeholder="City"
                 />
               ) : (
-                <p className="text-gray-900">{profile?.city || 'Not provided'}</p>
+                <p className="text-gray-900 bg-gray-50 p-2 rounded">{profile?.city || 'Not provided'}</p>
               )}
             </div>
             <div>
@@ -225,7 +261,7 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
                   placeholder="State"
                 />
               ) : (
-                <p className="text-gray-900">{profile?.state || 'Not provided'}</p>
+                <p className="text-gray-900 bg-gray-50 p-2 rounded">{profile?.state || 'Not provided'}</p>
               )}
             </div>
           </div>
@@ -240,7 +276,7 @@ const ProfileEditForm = ({ isEditing, onEditToggle, onSave }: ProfileEditFormPro
                 placeholder="Postal Code"
               />
             ) : (
-              <p className="text-gray-900">{profile?.postal_code || 'Not provided'}</p>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded">{profile?.postal_code || 'Not provided'}</p>
             )}
           </div>
 

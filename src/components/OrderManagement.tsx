@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +39,7 @@ interface Order {
 
 interface EditingOrder {
   id: string;
+  status: string;
   shipping_status: string;
   courier_name: string;
   courier_contact: string;
@@ -155,6 +157,7 @@ const OrderManagement = () => {
   const handleEdit = (order: Order) => {
     setEditingOrder({
       id: order.id,
+      status: order.status || 'pending',
       shipping_status: order.shipping_status || 'pending',
       courier_name: order.courier_name || '',
       courier_contact: order.courier_contact || '',
@@ -172,6 +175,7 @@ const OrderManagement = () => {
     try {
       console.log('Updating order with ID:', editingOrder.id);
       console.log('Update data:', {
+        status: editingOrder.status,
         shipping_status: editingOrder.shipping_status,
         courier_name: editingOrder.courier_name || null,
         courier_contact: editingOrder.courier_contact || null,
@@ -181,10 +185,12 @@ const OrderManagement = () => {
       const { data, error } = await supabase
         .from('orders')
         .update({
+          status: editingOrder.status,
           shipping_status: editingOrder.shipping_status,
           courier_name: editingOrder.courier_name || null,
           courier_contact: editingOrder.courier_contact || null,
           tracking_id: editingOrder.tracking_id || null,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', editingOrder.id)
         .select();
@@ -202,6 +208,7 @@ const OrderManagement = () => {
           order.id === editingOrder.id 
             ? {
                 ...order,
+                status: editingOrder.status,
                 shipping_status: editingOrder.shipping_status,
                 courier_name: editingOrder.courier_name,
                 courier_contact: editingOrder.courier_contact,
@@ -214,7 +221,7 @@ const OrderManagement = () => {
       setEditingOrder(null);
       toast({
         title: "Success",
-        description: "Order shipping details updated successfully",
+        description: "Order updated successfully",
       });
 
       // Refresh orders to ensure we have the latest data
@@ -248,6 +255,17 @@ const OrderManagement = () => {
       case 'delivered': return 'Delivered';
       case 'cancelled': return 'Cancelled';
       default: return 'Unknown';
+    }
+  };
+
+  const getOrderStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-orange-600';
+      case 'confirmed': return 'text-blue-600';
+      case 'processing': return 'text-purple-600';
+      case 'completed': return 'text-green-600';
+      case 'cancelled': return 'text-red-600';
+      default: return 'text-gray-600';
     }
   };
 
@@ -329,7 +347,29 @@ const OrderManagement = () => {
                     </TableCell>
                     <TableCell>₹{order.total_amount}</TableCell>
                     <TableCell>
-                      <span className="capitalize">{order.status}</span>
+                      {editingOrder?.id === order.id ? (
+                        <Select
+                          value={editingOrder.status}
+                          onValueChange={(value) => 
+                            setEditingOrder({...editingOrder, status: value})
+                          }
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="processing">Processing</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className={`capitalize ${getOrderStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {editingOrder?.id === order.id ? (

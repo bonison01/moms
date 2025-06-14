@@ -1,164 +1,94 @@
+
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuthContext';
+import { useCart } from '@/hooks/useCartContext';
 import Layout from '../components/Layout';
-import { ShoppingCart, User, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, User, Plus, Minus, Loader2, ArrowLeft, Star, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string | null;
+  description: string | null;
+  category: string | null;
+  features: string[] | null;
+  ingredients: string | null;
+  nutrition_facts: any;
+  offers: string | null;
+  stock_quantity: number | null;
+  is_active: boolean;
+}
 
 const Product = () => {
   const { id } = useParams();
   const { isAuthenticated, user } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const products = {
-    'seasoned-fermented-fish': {
-      name: 'Seasoned Fermented Fish',
-      price: '₹1,599',
-      image: '/lovable-uploads/b4742f71-5f91-4c9b-8dfa-88d0e668b696.png',
-      description: 'Ngari Angouba - Traditional seasoned fermented fish, roasted and ready to eat with authentic spices. A delicacy from Manipur prepared using traditional methods.',
-      ingredients: ['Fermented fish', 'Traditional spice blend', 'Salt', 'Natural seasonings', 'Preservatives'],
-      nutritionFacts: {
-        servingSize: '2 oz (56g)',
-        calories: '95',
-        protein: '16g',
-        sodium: '720mg'
-      },
-      features: [
-        'Authentic Manipuri preparation',
-        'Ready to eat',
-        'Traditional roasting method',
-        'Rich in protein',
-        'No artificial flavors'
-      ]
-    },
-    'chicken-pickle': {
-      name: 'Chicken Pickle',
-      price: '₹1,299',
-      image: '/lovable-uploads/5d3d1fda-566d-4288-867d-21ed4494e26f.png',
-      description: 'A product of Manipur - Just like homemade chicken pickle with traditional spices and authentic flavors. Made using time-honored family recipes.',
-      ingredients: ['Free-range chicken', 'Traditional spices', 'Mustard oil', 'Salt', 'Natural preservatives'],
-      nutritionFacts: {
-        servingSize: '3 oz (85g)',
-        calories: '145',
-        protein: '18g',
-        sodium: '620mg'
-      },
-      features: [
-        'Homemade taste',
-        'Traditional Manipuri recipe',
-        'Made with free-range chicken',
-        'Authentic spice blend',
-        'Long shelf life'
-      ]
-    },
-    'spicy-lentil-crisp': {
-      name: 'Spicy Lentil Crisp',
-      price: '₹999',
-      image: '/lovable-uploads/8dae3250-8a46-444e-8b50-f50cf472cff8.png',
-      description: 'Bori Mix - Crunchy spicy lentil crisps perfect as a snack or side dish with traditional meals. Made from premium lentils with authentic spices.',
-      ingredients: ['Black gram lentils', 'Spice mix', 'Salt', 'Oil', 'Natural seasonings'],
-      nutritionFacts: {
-        servingSize: '1 oz (28g)',
-        calories: '110',
-        protein: '8g',
-        sodium: '380mg'
-      },
-      features: [
-        'Crunchy texture',
-        'High protein content',
-        'Traditional preparation',
-        'Perfect snack food',
-        'Vegetarian friendly'
-      ]
-    },
-    'spicy-soybean-crisp': {
-      name: 'Spicy Soybean Crisp',
-      price: '₹1,199',
-      image: '/lovable-uploads/96a97ecf-07a2-4ca9-90c6-5bef5e37e2c2.png',
-      description: 'Hawaijar Mix - Crispy spicy soybean mix with authentic traditional flavors and spices. A popular side dish from Manipur.',
-      ingredients: ['Fermented soybeans', 'Chili powder', 'Salt', 'Traditional spices', 'Oil'],
-      nutritionFacts: {
-        servingSize: '1 oz (28g)',
-        calories: '120',
-        protein: '10g',
-        sodium: '420mg'
-      },
-      features: [
-        'Fermented soybean base',
-        'Spicy and flavorful',
-        'Traditional Hawaijar preparation',
-        'Rich in protein',
-        'Authentic taste'
-      ]
-    },
-    'dry-chilli-chutney': {
-      name: 'Dry Chilli Chutney',
-      price: '₹899',
-      image: '/lovable-uploads/96367fda-747a-4537-947c-446c43ab2308.png',
-      description: 'Ametpa Mix with Ngari - Traditional dry chilli chutney with fermented fish, packed with authentic flavors and traditional preparation methods.',
-      ingredients: ['Dry chilies', 'Fermented fish', 'Salt', 'Traditional spices', 'Oil'],
-      nutritionFacts: {
-        servingSize: '1 tbsp (15g)',
-        calories: '45',
-        protein: '3g',
-        sodium: '280mg'
-      },
-      features: [
-        'Authentic chutney preparation',
-        'Traditional Ngari blend',
-        'Intense flavor profile',
-        'Long-lasting taste',
-        'Versatile condiment'
-      ]
-    },
-    'spicy-stink-beans': {
-      name: 'Spicy Stink Beans',
-      price: '₹1,099',
-      image: '/lovable-uploads/80957d89-ebbe-4a50-93ee-d05b8b7f70b5.png',
-      description: 'Yongchak Maru Mix - Traditional spicy stink beans preparation with authentic Manipuri spices. A unique delicacy with distinctive flavors.',
-      ingredients: ['Tree beans (Yongchak)', 'Spice blend', 'Salt', 'Oil', 'Traditional seasonings'],
-      nutritionFacts: {
-        servingSize: '2 oz (56g)',
-        calories: '85',
-        protein: '7g',
-        sodium: '350mg'
-      },
-      features: [
-        'Unique tree bean preparation',
-        'Traditional Manipuri delicacy',
-        'Distinctive flavor',
-        'Nutritious and healthy',
-        'Authentic spice blend'
-      ]
-    },
-    'bamboo-shoot-chicken-pickle': {
-      name: 'Bamboo Shoot Chicken Pickle',
-      price: '₹1,399',
-      image: '/lovable-uploads/02bd53a8-2cb2-4f88-8765-a8ac21aa2273.png',
-      description: 'Premium bamboo shoot chicken pickle combining tender chicken with fresh bamboo shoots in traditional spices. A gourmet preparation from Manipur.',
-      ingredients: ['Chicken', 'Fresh bamboo shoots', 'Traditional spices', 'Oil', 'Natural preservatives'],
-      nutritionFacts: {
-        servingSize: '3 oz (85g)',
-        calories: '155',
-        protein: '20g',
-        sodium: '580mg'
-      },
-      features: [
-        'Fresh bamboo shoots',
-        'Premium chicken cuts',
-        'Gourmet preparation',
-        'Traditional recipe',
-        'Rich in nutrients'
-      ]
+  useEffect(() => {
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      
+      // First try to fetch by ID
+      let { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .eq('is_active', true)
+        .single();
+
+      // If not found by ID, try to fetch by slug (name converted to slug format)
+      if (error && error.code === 'PGRST116') {
+        const { data: allProducts, error: allError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true);
+
+        if (!allError && allProducts) {
+          // Find product by slug match
+          const matchedProduct = allProducts.find(p => {
+            const slug = p.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            return slug === id;
+          });
+          
+          if (matchedProduct) {
+            data = matchedProduct;
+            error = null;
+          }
+        }
+      }
+
+      if (error) {
+        console.error('Error fetching product:', error);
+        setProduct(null);
+      } else {
+        setProduct(data);
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setProduct(null);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const product = products[id as keyof typeof products];
-
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -169,14 +99,25 @@ const Product = () => {
       return;
     }
 
-    toast({
-      title: "Purchase Initiated",
-      description: `Starting checkout for ${quantity} x ${product.name}`,
-    });
-    // Here you would integrate with payment processing
+    if (!product) return;
+
+    try {
+      await addToCart(product.id, quantity);
+      navigate('/checkout');
+      toast({
+        title: "Redirecting to Checkout",
+        description: `${quantity} x ${product.name} added to cart`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
@@ -187,10 +128,21 @@ const Product = () => {
       return;
     }
 
-    toast({
-      title: "Added to Cart",
-      description: `${quantity} x ${product.name} added to your cart.`,
-    });
+    if (!product) return;
+
+    try {
+      await addToCart(product.id, quantity);
+      toast({
+        title: "Added to Cart",
+        description: `${quantity} x ${product.name} added to your cart.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart",
+        variant: "destructive",
+      });
+    }
   };
 
   const updateQuantity = (change: number) => {
@@ -200,14 +152,39 @@ const Product = () => {
     }
   };
 
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    toast({
+      title: isFavorite ? "Removed from favorites" : "Added to favorites",
+      description: isFavorite ? "Product removed from your wishlist" : "Product added to your wishlist",
+    });
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading product...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!product) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-black mb-4">Product Not Found</h1>
-            <Link to="/shop" className="text-gray-600 hover:text-black">
-              Return to Shop
+            <p className="text-gray-600 mb-6">The product you're looking for doesn't exist or has been removed.</p>
+            <Link to="/shop">
+              <Button className="bg-black text-white hover:bg-gray-800">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Return to Shop
+              </Button>
             </Link>
           </div>
         </div>
@@ -221,23 +198,27 @@ const Product = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <nav className="mb-8">
-            <Link to="/shop" className="text-gray-600 hover:text-black">Shop</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-600">{product.name}</span>
+            <div className="flex items-center space-x-2 text-sm">
+              <Link to="/" className="text-gray-600 hover:text-black transition-colors">Home</Link>
+              <span className="text-gray-400">/</span>
+              <Link to="/shop" className="text-gray-600 hover:text-black transition-colors">Shop</Link>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-900 font-medium">{product.name}</span>
+            </div>
           </nav>
 
           {/* Authentication Status */}
           {!isAuthenticated && (
-            <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-yellow-600" />
-                  <span className="text-yellow-800">Sign in to purchase this product</span>
+                  <span className="text-yellow-800 font-medium">Sign in to purchase this product</span>
                 </div>
                 <Button 
                   onClick={() => navigate('/auth')}
                   size="sm"
-                  className="bg-yellow-600 hover:bg-yellow-700"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white"
                 >
                   Sign In
                 </Button>
@@ -247,45 +228,108 @@ const Product = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Product Image */}
-            <div>
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full rounded-lg shadow-lg border border-gray-200"
-              />
+            <div className="relative">
+              <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src={product.image_url || '/placeholder.svg'}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {/* Favorite Button */}
+              <Button
+                onClick={toggleFavorite}
+                variant="outline"
+                size="sm"
+                className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white"
+              >
+                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+              </Button>
+
+              {/* Offer Badge */}
+              {product.offers && (
+                <div className="absolute top-4 left-4">
+                  <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                    {product.offers}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Product Details */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-black mb-4">
-                {product.name}
-              </h1>
-              <p className="text-2xl font-bold text-black mb-6">
-                {product.price}
-              </p>
-              <p className="text-lg text-gray-600 mb-8">
-                {product.description}
-              </p>
+              <div className="mb-6">
+                <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
+                  {product.name}
+                </h1>
+                
+                {/* Rating */}
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-600">(4.8 out of 5)</span>
+                </div>
+
+                <div className="flex items-center space-x-4 mb-6">
+                  <span className="text-3xl font-bold text-black">
+                    ₹{product.price.toLocaleString()}
+                  </span>
+                  {product.category && (
+                    <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                      {product.category}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {product.description && (
+                <div className="mb-8">
+                  <p className="text-lg text-gray-600 leading-relaxed">
+                    {product.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Stock Status */}
+              <div className="mb-6">
+                {product.stock_quantity !== null && (
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${product.stock_quantity > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span className={`text-sm font-medium ${product.stock_quantity > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                      {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity} available)` : 'Out of Stock'}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {/* Quantity Selector */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   Quantity
                 </label>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => updateQuantity(-1)}
                     disabled={quantity <= 1}
+                    className="h-10 w-10"
                   >
                     <Minus className="w-4 h-4" />
                   </Button>
-                  <span className="text-xl font-medium px-4">{quantity}</span>
+                  <span className="text-xl font-semibold px-4 py-2 bg-gray-50 rounded-lg min-w-[60px] text-center">
+                    {quantity}
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => updateQuantity(1)}
+                    disabled={product.stock_quantity !== null && quantity >= product.stock_quantity}
+                    className="h-10 w-10"
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -296,64 +340,64 @@ const Product = () => {
               <div className="space-y-4 mb-8">
                 <Button
                   onClick={handleBuyNow}
-                  className="w-full bg-black text-white hover:bg-gray-800 text-lg py-3"
+                  disabled={product.stock_quantity === 0}
+                  className="w-full bg-black text-white hover:bg-gray-800 text-lg py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
-                  Buy Now - {product.price}
+                  {product.stock_quantity === 0 ? 'Out of Stock' : `Buy Now - ₹${(product.price * quantity).toLocaleString()}`}
                 </Button>
                 
                 <Button
                   onClick={handleAddToCart}
                   variant="outline"
-                  className="w-full text-lg py-3"
+                  disabled={product.stock_quantity === 0}
+                  className="w-full text-lg py-4 rounded-xl font-medium border-2 border-gray-200 hover:border-black transition-all duration-300"
                 >
                   Add to Cart
                 </Button>
               </div>
 
               {/* Product Features */}
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-black mb-4">Product Features</h3>
-                <ul className="space-y-2">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-black mr-2">✓</span>
-                      <span className="text-gray-600">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {product.features && product.features.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-black mb-4">Key Features</h3>
+                  <ul className="space-y-3">
+                    {product.features.map((feature, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="text-green-500 mr-3 mt-1">✓</span>
+                        <span className="text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Ingredients */}
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-black mb-4">Ingredients</h3>
-                <p className="text-gray-600">
-                  {product.ingredients.join(', ')}
-                </p>
-              </div>
+              {product.ingredients && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-black mb-4">Ingredients</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    {product.ingredients}
+                  </p>
+                </div>
+              )}
 
               {/* Nutrition Facts */}
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h3 className="text-xl font-bold text-black mb-4">Nutrition Facts</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-medium text-black">Serving Size:</span>
-                    <span className="text-gray-600 ml-2">{product.nutritionFacts.servingSize}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-black">Calories:</span>
-                    <span className="text-gray-600 ml-2">{product.nutritionFacts.calories}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-black">Protein:</span>
-                    <span className="text-gray-600 ml-2">{product.nutritionFacts.protein}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium text-black">Sodium:</span>
-                    <span className="text-gray-600 ml-2">{product.nutritionFacts.sodium}</span>
+              {product.nutrition_facts && (
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                  <h3 className="text-xl font-bold text-black mb-4">Nutrition Facts</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(product.nutrition_facts).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="font-medium text-black capitalize">
+                          {key.replace(/_/g, ' ')}:
+                        </span>
+                        <span className="text-gray-700">{value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

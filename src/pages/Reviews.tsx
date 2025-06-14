@@ -1,8 +1,18 @@
-
+import { useState } from 'react';
 import Layout from '../components/Layout';
 import TestimonialCard from '../components/TestimonialCard';
+import ReviewForm from '../components/ReviewForm';
+import ReviewsList from '../components/ReviewsList';
+import { Button } from '@/components/ui/button';
 
 const Reviews = () => {
+  const [activeTab, setActiveTab] = useState<'testimonials' | 'customer-reviews'>('testimonials');
+  const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
+
+  const handleReviewSubmitted = () => {
+    setReviewsRefreshTrigger(prev => prev + 1);
+  };
+
   const reviews = [
     {
       name: 'Priya Sharma',
@@ -71,65 +81,119 @@ const Reviews = () => {
         </div>
       </section>
 
-      {/* Rating Summary */}
-      <section className="py-16 bg-white">
+      {/* Tab Navigation */}
+      <section className="py-8 bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center bg-yellow-50 px-6 py-4 rounded-lg">
-              <div className="flex text-yellow-400 text-2xl mr-4">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className={i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}>
-                    ★
-                  </span>
-                ))}
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-800">{averageRating.toFixed(1)}/5</div>
-                <div className="text-sm text-gray-600">Based on {reviews.length} reviews</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Reviews Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            {reviews.map((review, index) => (
-              <TestimonialCard key={index} {...review} />
-            ))}
-          </div>
-
-          {/* Instagram Photos Section */}
-          <div className="text-center mb-12">
-            <h3 className="text-2xl font-bold text-black mb-6">Follow us on Instagram</h3>
-            <p className="text-gray-600 mb-8">See how our customers enjoy Momsgoogoo Foods</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-              {instagramPhotos.map((photo, index) => (
-                <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                  <img 
-                    src={photo} 
-                    alt={`Customer photo ${index + 1}`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Leave a Review Call-to-Action */}
-          <div className="text-center">
-            <div className="bg-gray-50 p-8 rounded-lg max-w-2xl mx-auto border border-gray-200">
-              <h3 className="text-2xl font-bold text-black mb-4">Share Your Experience</h3>
-              <p className="text-gray-600 mb-6">
-                Have you tried our products? We'd love to hear about your experience! 
-                Your feedback helps us continue to improve and helps other customers 
-                make informed decisions.
-              </p>
-              <button className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
-                Write a Review
-              </button>
-            </div>
+          <div className="flex justify-center space-x-8">
+            <Button
+              onClick={() => setActiveTab('testimonials')}
+              variant={activeTab === 'testimonials' ? 'default' : 'outline'}
+              className={activeTab === 'testimonials' ? 'bg-black text-white' : ''}
+            >
+              Featured Testimonials
+            </Button>
+            <Button
+              onClick={() => setActiveTab('customer-reviews')}
+              variant={activeTab === 'customer-reviews' ? 'default' : 'outline'}
+              className={activeTab === 'customer-reviews' ? 'bg-black text-white' : ''}
+            >
+              Customer Reviews
+            </Button>
           </div>
         </div>
       </section>
+
+      {activeTab === 'testimonials' ? (
+        <>
+          {/* Rating Summary */}
+          <section className="py-16 bg-white">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center bg-yellow-50 px-6 py-4 rounded-lg">
+                  <div className="flex text-yellow-400 text-2xl mr-4">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className={i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}>
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-800">{averageRating.toFixed(1)}/5</div>
+                    <div className="text-sm text-gray-600">Based on {reviews.length} reviews</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reviews Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                {reviews.map((review, index) => (
+                  <TestimonialCard key={index} {...review} />
+                ))}
+              </div>
+
+              {/* Instagram Photos Section */}
+              <div className="text-center mb-12">
+                <h3 className="text-2xl font-bold text-black mb-6">Follow us on Instagram</h3>
+                <p className="text-gray-600 mb-8">See how our customers enjoy Momsgoogoo Foods</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                  {instagramPhotos.map((photo, index) => (
+                    <div key={index} className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                      <img 
+                        src={photo} 
+                        alt={`Customer photo ${index + 1}`}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Leave a Review Call-to-Action */}
+              <div className="text-center">
+                <div className="bg-gray-50 p-8 rounded-lg max-w-2xl mx-auto border border-gray-200">
+                  <h3 className="text-2xl font-bold text-black mb-4">Share Your Experience</h3>
+                  <p className="text-gray-600 mb-6">
+                    Have you tried our products? We'd love to hear about your experience! 
+                    Your feedback helps us continue to improve and helps other customers 
+                    make informed decisions.
+                  </p>
+                  <button className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+                    Write a Review
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      ) : (
+        /* Customer Reviews Section */
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-black mb-4">Brand Reviews</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Read authentic reviews from our customers about Momsgoogoo Foods brand
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              {/* Reviews List */}
+              <div>
+                <ReviewsList 
+                  refreshTrigger={reviewsRefreshTrigger}
+                />
+              </div>
+
+              {/* Review Form */}
+              <div>
+                <ReviewForm 
+                  onReviewSubmitted={handleReviewSubmitted}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
     </Layout>
   );
 };

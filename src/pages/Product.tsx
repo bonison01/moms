@@ -7,6 +7,8 @@ import Layout from '../components/Layout';
 import { ShoppingCart, User, Plus, Minus, Loader2, ArrowLeft, Star, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import ReviewForm from '../components/ReviewForm';
+import ReviewsList from '../components/ReviewsList';
 
 interface Product {
   id: string;
@@ -33,6 +35,7 @@ const Product = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -162,6 +165,10 @@ const Product = () => {
       title: isFavorite ? "Removed from favorites" : "Added to favorites",
       description: isFavorite ? "Product removed from your wishlist" : "Product added to your wishlist",
     });
+  };
+
+  const handleReviewSubmitted = () => {
+    setReviewsRefreshTrigger(prev => prev + 1);
   };
 
   if (loading) {
@@ -402,6 +409,32 @@ const Product = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-16">
+            <div className="border-t border-gray-200 pt-16">
+              <h2 className="text-3xl font-bold text-black mb-8">Customer Reviews</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Reviews List */}
+                <div>
+                  <h3 className="text-xl font-bold text-black mb-6">Product Reviews</h3>
+                  <ReviewsList 
+                    productId={product.id} 
+                    refreshTrigger={reviewsRefreshTrigger}
+                  />
+                </div>
+
+                {/* Review Form */}
+                <div>
+                  <ReviewForm 
+                    productId={product.id}
+                    onReviewSubmitted={handleReviewSubmitted}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

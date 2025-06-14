@@ -129,35 +129,47 @@ export type Database = {
       }
       orders: {
         Row: {
+          courier_contact: string | null
+          courier_name: string | null
           created_at: string | null
           delivery_address: Json | null
           id: string
           payment_method: string | null
           phone: string | null
+          shipping_status: string | null
           status: string
           total_amount: number
+          tracking_id: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          courier_contact?: string | null
+          courier_name?: string | null
           created_at?: string | null
           delivery_address?: Json | null
           id?: string
           payment_method?: string | null
           phone?: string | null
+          shipping_status?: string | null
           status?: string
           total_amount: number
+          tracking_id?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          courier_contact?: string | null
+          courier_name?: string | null
           created_at?: string | null
           delivery_address?: Json | null
           id?: string
           payment_method?: string | null
           phone?: string | null
+          shipping_status?: string | null
           status?: string
           total_amount?: number
+          tracking_id?: string | null
           updated_at?: string | null
           user_id?: string
         }

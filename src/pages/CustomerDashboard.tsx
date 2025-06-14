@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { User, ShoppingBag, Package, Clock, LogOut, MapPin, Phone, Mail } from 'lucide-react';
+import { User, ShoppingBag, Package, Clock, LogOut, MapPin, Phone, Mail, Truck } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -16,6 +15,10 @@ interface Order {
   payment_method: string;
   delivery_address: any;
   phone: string;
+  shipping_status: string;
+  courier_name: string;
+  courier_contact: string;
+  tracking_id: string;
   created_at: string;
   order_items: {
     id: string;
@@ -53,6 +56,10 @@ const CustomerDashboard = () => {
           payment_method,
           delivery_address,
           phone,
+          shipping_status,
+          courier_name,
+          courier_contact,
+          tracking_id,
           created_at,
           order_items (
             id,
@@ -100,9 +107,31 @@ const CustomerDashboard = () => {
     }
   };
 
+  const getShippingStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-orange-600';
+      case 'shipped': return 'text-blue-600';
+      case 'out_for_delivery': return 'text-purple-600';
+      case 'delivered': return 'text-green-600';
+      case 'cancelled': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getShippingStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending';
+      case 'shipped': return 'Shipped';
+      case 'out_for_delivery': return 'Out for Delivery';
+      case 'delivered': return 'Delivered';
+      case 'cancelled': return 'Cancelled';
+      default: return 'Unknown';
+    }
+  };
+
   const totalOrders = orders.length;
-  const deliveredOrders = orders.filter(order => order.status === 'delivered').length;
-  const pendingOrders = orders.filter(order => order.status === 'pending').length;
+  const deliveredOrders = orders.filter(order => order.shipping_status === 'delivered').length;
+  const pendingOrders = orders.filter(order => order.shipping_status === 'pending').length;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -235,7 +264,7 @@ const CustomerDashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Your Orders</CardTitle>
-                    <CardDescription>Your order history and current status</CardDescription>
+                    <CardDescription>Your order history and shipping status</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {loading ? (
@@ -262,6 +291,44 @@ const CustomerDashboard = () => {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Shipping Status */}
+                            {order.shipping_status && (
+                              <div className="bg-gray-50 p-3 rounded-md">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h5 className="text-sm font-medium text-gray-700 flex items-center space-x-2">
+                                    <Truck className="h-4 w-4" />
+                                    <span>Shipping Status</span>
+                                  </h5>
+                                  <div className={`text-sm font-medium ${getShippingStatusColor(order.shipping_status)}`}>
+                                    {getShippingStatusLabel(order.shipping_status)}
+                                  </div>
+                                </div>
+                                
+                                {(order.courier_name || order.courier_contact || order.tracking_id) && (
+                                  <div className="text-sm space-y-1">
+                                    {order.courier_name && (
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-gray-500">Courier:</span>
+                                        <span className="font-medium">{order.courier_name}</span>
+                                      </div>
+                                    )}
+                                    {order.courier_contact && (
+                                      <div className="flex items-center space-x-2">
+                                        <Phone className="h-3 w-3 text-gray-500" />
+                                        <span>{order.courier_contact}</span>
+                                      </div>
+                                    )}
+                                    {order.tracking_id && (
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-gray-500">Tracking ID:</span>
+                                        <span className="font-mono text-sm">{order.tracking_id}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* Order Items */}
                             <div className="space-y-2">

@@ -1,0 +1,365 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { Edit, Save, X, Package, Truck, Phone, MapPin } from 'lucide-react';
+
+interface Order {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  status: string;
+  payment_method: string;
+  delivery_address: any;
+  phone: string;
+  shipping_status: string;
+  courier_name: string;
+  courier_contact: string;
+  tracking_id: string;
+  created_at: string;
+  profiles: {
+    email: string;
+    full_name: string;
+  };
+  order_items: {
+    id: string;
+    quantity: number;
+    price: number;
+    product: {
+      name: string;
+    };
+  }[];
+}
+
+interface EditingOrder {
+  id: string;
+  shipping_status: string;
+  courier_name: string;
+  courier_contact: string;
+  tracking_id: string;
+}
+
+const OrderManagement = () => {
+  const { toast } = useToast();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingOrder, setEditingOrder] = useState<EditingOrder | null>(null);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          user_id,
+          total_amount,
+          status,
+          payment_method,
+          delivery_address,
+          phone,
+          shipping_status,
+          courier_name,
+          courier_contact,
+          tracking_id,
+          created_at,
+          profiles!inner (
+            email,
+            full_name
+          ),
+          order_items (
+            id,
+            quantity,
+            price,
+            product:products (
+              name
+            )
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error: any) {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch orders",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (order: Order) => {
+    setEditingOrder({
+      id: order.id,
+      shipping_status: order.shipping_status || 'pending',
+      courier_name: order.courier_name || '',
+      courier_contact: order.courier_contact || '',
+      tracking_id: order.tracking_id || '',
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingOrder(null);
+  };
+
+  const handleSave = async () => {
+    if (!editingOrder) return;
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          shipping_status: editingOrder.shipping_status,
+          courier_name: editingOrder.courier_name,
+          courier_contact: editingOrder.courier_contact,
+          tracking_id: editingOrder.tracking_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingOrder.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setOrders(orders.map(order => 
+        order.id === editingOrder.id 
+          ? {
+              ...order,
+              shipping_status: editingOrder.shipping_status,
+              courier_name: editingOrder.courier_name,
+              courier_contact: editingOrder.courier_contact,
+              tracking_id: editingOrder.tracking_id,
+            }
+          : order
+      ));
+
+      setEditingOrder(null);
+      toast({
+        title: "Success",
+        description: "Order shipping details updated successfully",
+      });
+    } catch (error: any) {
+      console.error('Error updating order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update order",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getShippingStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-orange-600';
+      case 'shipped': return 'text-blue-600';
+      case 'out_for_delivery': return 'text-purple-600';
+      case 'delivered': return 'text-green-600';
+      case 'cancelled': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getShippingStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending';
+      case 'shipped': return 'Shipped';
+      case 'out_for_delivery': return 'Out for Delivery';
+      case 'delivered': return 'Delivered';
+      case 'cancelled': return 'Cancelled';
+      default: return 'Unknown';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <Package className="h-8 w-8 animate-spin mx-auto mb-4" />
+        <p>Loading orders...</p>
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Package className="h-5 w-5" />
+          <span>Order Management</span>
+        </CardTitle>
+        <CardDescription>Manage orders and shipping status</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {orders.length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Order Status</TableHead>
+                  <TableHead>Shipping Status</TableHead>
+                  <TableHead>Courier Info</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">
+                      #{order.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{order.profiles.full_name || 'N/A'}</p>
+                        <p className="text-sm text-gray-500">{order.profiles.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {order.order_items?.map((item, idx) => (
+                          <div key={item.id}>
+                            {item.product?.name} (x{item.quantity})
+                            {idx < order.order_items.length - 1 && <br />}
+                          </div>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>₹{order.total_amount}</TableCell>
+                    <TableCell>
+                      <span className="capitalize">{order.status}</span>
+                    </TableCell>
+                    <TableCell>
+                      {editingOrder?.id === order.id ? (
+                        <Select
+                          value={editingOrder.shipping_status}
+                          onValueChange={(value) => 
+                            setEditingOrder({...editingOrder, shipping_status: value})
+                          }
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="shipped">Shipped</SelectItem>
+                            <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                            <SelectItem value="delivered">Delivered</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className={`capitalize ${getShippingStatusColor(order.shipping_status)}`}>
+                          {getShippingStatusLabel(order.shipping_status)}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingOrder?.id === order.id ? (
+                        <div className="space-y-2 min-w-48">
+                          <div>
+                            <Label className="text-xs">Courier Name</Label>
+                            <Input
+                              placeholder="Courier name"
+                              value={editingOrder.courier_name}
+                              onChange={(e) => 
+                                setEditingOrder({...editingOrder, courier_name: e.target.value})
+                              }
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Contact</Label>
+                            <Input
+                              placeholder="Phone number"
+                              value={editingOrder.courier_contact}
+                              onChange={(e) => 
+                                setEditingOrder({...editingOrder, courier_contact: e.target.value})
+                              }
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Tracking ID</Label>
+                            <Input
+                              placeholder="Tracking ID"
+                              value={editingOrder.tracking_id}
+                              onChange={(e) => 
+                                setEditingOrder({...editingOrder, tracking_id: e.target.value})
+                              }
+                              className="h-8"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm">
+                          {order.courier_name && (
+                            <div className="flex items-center space-x-1">
+                              <Truck className="h-3 w-3" />
+                              <span>{order.courier_name}</span>
+                            </div>
+                          )}
+                          {order.courier_contact && (
+                            <div className="flex items-center space-x-1">
+                              <Phone className="h-3 w-3" />
+                              <span>{order.courier_contact}</span>
+                            </div>
+                          )}
+                          {order.tracking_id && (
+                            <div className="text-xs text-gray-500">
+                              ID: {order.tracking_id}
+                            </div>
+                          )}
+                          {!order.courier_name && !order.courier_contact && !order.tracking_id && (
+                            <span className="text-gray-400">Not assigned</span>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingOrder?.id === order.id ? (
+                        <div className="flex space-x-1">
+                          <Button onClick={handleSave} size="sm" variant="default">
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button onClick={handleCancelEdit} size="sm" variant="outline">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button onClick={() => handleEdit(order)} size="sm" variant="outline">
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+            <p className="text-gray-500">Orders will appear here when customers place them.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default OrderManagement;

@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash, Save, X, Package, LogOut, Home } from 'lucide-react';
+import OrderManagement from '@/components/OrderManagement';
 
 interface Product {
   id: string;
@@ -230,7 +232,7 @@ const ProductManagement = () => {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-1">Manage your products and inventory</p>
+              <p className="text-gray-600 mt-1">Manage your products and orders</p>
             </div>
             <div className="flex items-center space-x-4">
               <Button
@@ -257,42 +259,55 @@ const ProductManagement = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Products</h2>
-            <Button onClick={() => setIsCreating(true)} className="flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Add Product</span>
-            </Button>
-          </div>
+          <Tabs defaultValue="orders" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="orders">Orders</TabsTrigger>
+              <TabsTrigger value="products">Products</TabsTrigger>
+            </TabsList>
 
-          {loadingProducts ? (
-            <div className="text-center">Loading products...</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
-                <Card key={product.id}>
-                  <CardHeader>
-                    <CardTitle>{product.name}</CardTitle>
-                    <CardDescription>Price: ₹{product.price}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <img src={product.image_url || '/placeholder-image.png'} alt={product.name} className="w-full h-48 object-cover mb-4 rounded-md" />
-                    <p className="text-sm text-gray-500">{product.description?.substring(0, 100)}...</p>
-                    <div className="flex justify-end space-x-2 mt-4">
-                      <Button variant="secondary" size="sm" onClick={() => handleEdit(product)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)}>
-                        <Trash className="h-4 w-4 mr-2" />
-                        Delete
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+            <TabsContent value="orders">
+              <OrderManagement />
+            </TabsContent>
+
+            <TabsContent value="products">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Products</h2>
+                <Button onClick={() => setIsCreating(true)} className="flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Add Product</span>
+                </Button>
+              </div>
+
+              {loadingProducts ? (
+                <div className="text-center">Loading products...</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.map((product) => (
+                    <Card key={product.id}>
+                      <CardHeader>
+                        <CardTitle>{product.name}</CardTitle>
+                        <CardDescription>Price: ₹{product.price}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <img src={product.image_url || '/placeholder-image.png'} alt={product.name} className="w-full h-48 object-cover mb-4 rounded-md" />
+                        <p className="text-sm text-gray-500">{product.description?.substring(0, 100)}...</p>
+                        <div className="flex justify-end space-x-2 mt-4">
+                          <Button variant="secondary" size="sm" onClick={() => handleEdit(product)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDelete(product.id)}>
+                            <Trash className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           {/* Edit Product Modal */}
           {editingProduct && (

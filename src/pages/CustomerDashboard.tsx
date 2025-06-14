@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { User, ShoppingBag, Package, Clock, LogOut } from 'lucide-react';
-import Layout from '@/components/Layout';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 interface Order {
   id: string;
@@ -60,8 +61,10 @@ const CustomerDashboard = () => {
   };
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
+      <main className="flex-grow bg-gray-50">
         {/* Header */}
         <div className="bg-white shadow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -79,7 +82,7 @@ const CustomerDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
@@ -189,9 +192,11 @@ const CustomerDashboard = () => {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    </Layout>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
   );
 };
 

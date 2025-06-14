@@ -173,7 +173,7 @@ const OrderManagement = () => {
     if (!editingOrder) return;
 
     try {
-      console.log('Updating order with ID:', editingOrder.id);
+      console.log('Attempting to update order with ID:', editingOrder.id);
       console.log('Update data:', {
         status: editingOrder.status,
         shipping_status: editingOrder.shipping_status,
@@ -182,8 +182,8 @@ const OrderManagement = () => {
         tracking_id: editingOrder.tracking_id || null,
       });
       
-      // Update the order in the database
-      const { error } = await supabase
+      // Update the order in the database with explicit column names
+      const { data, error } = await supabase
         .from('orders')
         .update({
           status: editingOrder.status,
@@ -193,14 +193,28 @@ const OrderManagement = () => {
           tracking_id: editingOrder.tracking_id || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', editingOrder.id);
+        .eq('id', editingOrder.id)
+        .select('*');
 
       if (error) {
         console.error('Supabase update error:', error);
         throw error;
       }
 
-      console.log('Update successful');
+      console.log('Update successful, database returned:', data);
+
+      // Verify the update by fetching the specific order
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('orders')
+        .select('id, status, shipping_status, courier_name, courier_contact, tracking_id')
+        .eq('id', editingOrder.id)
+        .single();
+
+      if (verifyError) {
+        console.error('Verification fetch error:', verifyError);
+      } else {
+        console.log('Verification data from database:', verifyData);
+      }
 
       // Update local state immediately to prevent reverting
       setOrders(prevOrders => 

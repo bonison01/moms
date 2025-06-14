@@ -182,7 +182,8 @@ const OrderManagement = () => {
         tracking_id: editingOrder.tracking_id || null,
       });
       
-      const { data, error } = await supabase
+      // Update the order in the database
+      const { error } = await supabase
         .from('orders')
         .update({
           status: editingOrder.status,
@@ -192,17 +193,16 @@ const OrderManagement = () => {
           tracking_id: editingOrder.tracking_id || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', editingOrder.id)
-        .select();
+        .eq('id', editingOrder.id);
 
       if (error) {
         console.error('Supabase update error:', error);
         throw error;
       }
 
-      console.log('Update successful, returned data:', data);
+      console.log('Update successful');
 
-      // Update local state
+      // Update local state immediately to prevent reverting
       setOrders(prevOrders => 
         prevOrders.map(order => 
           order.id === editingOrder.id 
@@ -224,8 +224,6 @@ const OrderManagement = () => {
         description: "Order updated successfully",
       });
 
-      // Refresh orders to ensure we have the latest data
-      await fetchOrders();
     } catch (error: any) {
       console.error('Error updating order:', error);
       toast({

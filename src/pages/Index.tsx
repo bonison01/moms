@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,15 +37,7 @@ const Index = () => {
         return;
       }
 
-      const formattedProducts = (data || []).map(product => ({
-        id: product.id,
-        name: product.name,
-        price: `₹${product.price}`,
-        image: product.image_url || '/placeholder.svg',
-        description: product.description || 'No description available'
-      }));
-
-      setFeaturedProducts(formattedProducts);
+      setFeaturedProducts(data || []);
     } catch (error) {
       console.error('Error fetching featured products:', error);
     } finally {
@@ -167,7 +158,14 @@ const Index = () => {
           ) : featuredProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
+                <ProductCard 
+                  key={product.id} 
+                  id={product.id}
+                  name={product.name}
+                  price={`₹${product.price}`}
+                  image={product.image_url || '/placeholder.svg'}
+                  description={product.description || 'No description available'}
+                />
               ))}
             </div>
           ) : (

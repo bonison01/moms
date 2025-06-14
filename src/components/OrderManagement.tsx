@@ -71,6 +71,8 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
+      console.log('Fetching orders...');
+      
       // First get all orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
@@ -90,13 +92,18 @@ const OrderManagement = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('Orders fetch error:', ordersError);
+        throw ordersError;
+      }
 
-      // Get order items for each order
+      console.log('Orders fetched:', ordersData);
+
+      // Get order items and user profiles for each order
       const ordersWithItems = await Promise.all(
         (ordersData || []).map(async (order) => {
           // Get order items
-          const { data: orderItems } = await supabase
+          const { data: orderItems, error: itemsError } = await supabase
             .from('order_items')
             .select(`
               id,
@@ -108,12 +115,20 @@ const OrderManagement = () => {
             `)
             .eq('order_id', order.id);
 
+          if (itemsError) {
+            console.error('Error fetching order items:', itemsError);
+          }
+
           // Get user profile
-          const { data: userProfile } = await supabase
+          const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
             .select('email, full_name')
             .eq('id', order.user_id)
-            .single();
+            .maybeSingle();
+
+          if (profileError) {
+            console.error('Error fetching user profile:', profileError);
+          }
 
           return {
             ...order,
@@ -123,6 +138,7 @@ const OrderManagement = () => {
         })
       );
 
+      console.log('Orders with items:', ordersWithItems);
       setOrders(ordersWithItems);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
@@ -154,7 +170,13 @@ const OrderManagement = () => {
     if (!editingOrder) return;
 
     try {
-      console.log('Updating order with data:', editingOrder);
+      console.log('Updating order with ID:', editingOrder.id);
+      console.log('Update data:', {
+        shipping_status: editingOrder.shipping_status,
+        courier_name: editingOrder.courier_name || null,
+        courier_contact: editingOrder.courier_contact || null,
+        tracking_id: editingOrder.tracking_id || null,
+      });
       
       const { data, error } = await supabase
         .from('orders')
@@ -163,36 +185,40 @@ const OrderManagement = () => {
           courier_name: editingOrder.courier_name || null,
           courier_contact: editingOrder.courier_contact || null,
           tracking_id: editingOrder.tracking_id || null,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', editingOrder.id)
         .select();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase update error:', error);
         throw error;
       }
 
-      console.log('Update successful:', data);
+      console.log('Update successful, returned data:', data);
 
       // Update local state
-      setOrders(orders.map(order => 
-        order.id === editingOrder.id 
-          ? {
-              ...order,
-              shipping_status: editingOrder.shipping_status,
-              courier_name: editingOrder.courier_name,
-              courier_contact: editingOrder.courier_contact,
-              tracking_id: editingOrder.tracking_id,
-            }
-          : order
-      ));
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === editingOrder.id 
+            ? {
+                ...order,
+                shipping_status: editingOrder.shipping_status,
+                courier_name: editingOrder.courier_name,
+                courier_contact: editingOrder.courier_contact,
+                tracking_id: editingOrder.tracking_id,
+              }
+            : order
+        )
+      );
 
       setEditingOrder(null);
       toast({
         title: "Success",
         description: "Order shipping details updated successfully",
       });
+
+      // Refresh orders to ensure we have the latest data
+      await fetchOrders();
     } catch (error: any) {
       console.error('Error updating order:', error);
       toast({

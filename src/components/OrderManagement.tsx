@@ -26,14 +26,14 @@ interface Order {
   profiles: {
     email: string;
     full_name: string;
-  };
+  } | null;
   order_items: {
     id: string;
     quantity: number;
     price: number;
     product: {
       name: string;
-    };
+    } | null;
   }[];
 }
 
@@ -72,7 +72,7 @@ const OrderManagement = () => {
           courier_contact,
           tracking_id,
           created_at,
-          profiles!inner (
+          profiles (
             email,
             full_name
           ),
@@ -224,15 +224,15 @@ const OrderManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{order.profiles.full_name || 'N/A'}</p>
-                        <p className="text-sm text-gray-500">{order.profiles.email}</p>
+                        <p className="font-medium">{order.profiles?.full_name || 'N/A'}</p>
+                        <p className="text-sm text-gray-500">{order.profiles?.email || 'N/A'}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
                         {order.order_items?.map((item, idx) => (
                           <div key={item.id}>
-                            {item.product?.name} (x{item.quantity})
+                            {item.product?.name || 'Unknown Product'} (x{item.quantity})
                             {idx < order.order_items.length - 1 && <br />}
                           </div>
                         ))}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuthContext';
@@ -184,25 +185,25 @@ const Shop = () => {
                   Choose from our selection of {products.length} premium products
                 </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
                 {products.map((product) => (
                   <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-                    <div className="aspect-w-1 aspect-h-1">
+                    <div className="aspect-square">
                       <img
                         src={product.image_url || '/placeholder.svg'}
                         alt={product.name}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    <div className="p-2 md:p-4">
+                      <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-1 md:mb-2 line-clamp-1">{product.name}</h3>
+                      <p className="text-gray-600 text-xs md:text-sm mb-2 md:mb-3 line-clamp-2">
                         {product.description || 'No description available'}
                       </p>
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-2xl font-bold text-black">₹{product.price}</span>
+                      <div className="flex items-center justify-between mb-2 md:mb-4">
+                        <span className="text-lg md:text-2xl font-bold text-black">₹{product.price}</span>
                         {product.stock_quantity !== null && (
-                          <span className="text-sm text-gray-500">
+                          <span className="text-xs md:text-sm text-gray-500">
                             Stock: {product.stock_quantity}
                           </span>
                         )}
@@ -210,41 +211,43 @@ const Shop = () => {
                       
                       {/* Quantity Selector */}
                       {isAuthenticated && (
-                        <div className="flex items-center justify-center space-x-2 mb-4">
+                        <div className="flex items-center justify-center space-x-1 md:space-x-2 mb-2 md:mb-4">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => updateQuantity(product.id, -1)}
                             disabled={quantities[product.id] <= 1}
+                            className="h-6 w-6 md:h-8 md:w-8 p-0"
                           >
-                            <Minus className="w-3 h-3" />
+                            <Minus className="w-2 h-2 md:w-3 md:h-3" />
                           </Button>
-                          <span className="text-sm font-medium px-3">{quantities[product.id] || 1}</span>
+                          <span className="text-xs md:text-sm font-medium px-1 md:px-3">{quantities[product.id] || 1}</span>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => updateQuantity(product.id, 1)}
+                            className="h-6 w-6 md:h-8 md:w-8 p-0"
                           >
-                            <Plus className="w-3 h-3" />
+                            <Plus className="w-2 h-2 md:w-3 md:h-3" />
                           </Button>
                         </div>
                       )}
                       
                       {/* Action Buttons */}
-                      <div className="space-y-2">
+                      <div className="space-y-1 md:space-y-2">
                         <Button
                           onClick={() => handleBuyNow(product)}
-                          className="w-full bg-black text-white hover:bg-gray-800"
+                          className="w-full bg-black text-white hover:bg-gray-800 text-xs md:text-sm py-2 md:py-2"
                           disabled={product.stock_quantity === 0}
                         >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
                           {product.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
                         </Button>
                         
                         <Button
                           onClick={() => handleAddToCart(product)}
                           variant="outline"
-                          className="w-full"
+                          className="w-full text-xs md:text-sm py-2 md:py-2"
                           disabled={product.stock_quantity === 0}
                         >
                           Add to Cart
@@ -253,7 +256,7 @@ const Shop = () => {
                         <Button
                           onClick={() => navigate(`/product/${product.id}`)}
                           variant="ghost"
-                          className="w-full text-sm"
+                          className="w-full text-xs md:text-sm py-1 md:py-2"
                         >
                           View Details
                         </Button>

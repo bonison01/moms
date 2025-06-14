@@ -17,6 +17,7 @@ import OrderDetails from '@/components/OrderDetails';
 import DashboardStats from '@/components/DashboardStats';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import UserReviews from '@/components/UserReviews';
+import ReviewForm from '@/components/ReviewForm';
 
 interface Order {
   id: string;

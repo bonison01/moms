@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +16,7 @@ import OrderCard from '@/components/OrderCard';
 import OrderDetails from '@/components/OrderDetails';
 import DashboardStats from '@/components/DashboardStats';
 import FeaturedProducts from '@/components/FeaturedProducts';
+import UserReviews from '@/components/UserReviews';
 
 interface Order {
   id: string;
@@ -56,6 +56,7 @@ const CustomerDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentView, setCurrentView] = useState<'dashboard' | 'orderDetails'>('dashboard');
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -146,6 +147,14 @@ const CustomerDashboard = () => {
   const handleBackToDashboard = () => {
     setSelectedOrderId(null);
     setCurrentView('dashboard');
+  };
+
+  const handleWriteReview = () => {
+    setShowReviewForm(true);
+  };
+
+  const handleReviewSubmitted = () => {
+    setShowReviewForm(false);
   };
 
   // Filter orders based on search term and status filter
@@ -246,14 +255,15 @@ const CustomerDashboard = () => {
 
           <div className={`${isMobile ? 'space-y-6' : 'grid lg:grid-cols-4 gap-6 lg:gap-8'}`}>
             
-            {/* Account Information & Saved Address */}
-            <div className={`${isMobile ? 'order-2' : 'lg:col-span-1'}`}>
-              <div className="sticky top-4">
+            {/* Account Information & Reviews */}
+            <div className={`${isMobile ? 'order-2' : 'lg:col-span-1'} space-y-6`}>
+              <div className="sticky top-4 space-y-6">
                 <ProfileEditForm 
                   isEditing={isEditingProfile}
                   onEditToggle={handleEditToggle}
                   onSave={handleProfileSave}
                 />
+                <UserReviews onWriteReview={handleWriteReview} />
               </div>
             </div>
 
@@ -380,6 +390,26 @@ const CustomerDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Review Form Modal */}
+      {showReviewForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Write a Review</h2>
+                <button 
+                  onClick={() => setShowReviewForm(false)}
+                  className="text-gray-500 hover:text-gray-700 text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+              <ReviewForm onReviewSubmitted={handleReviewSubmitted} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

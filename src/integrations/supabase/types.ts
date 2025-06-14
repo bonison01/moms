@@ -133,7 +133,9 @@ export type Database = {
           courier_name: string | null
           created_at: string | null
           delivery_address: Json | null
+          estimated_delivery_date: string | null
           id: string
+          notes: string | null
           payment_method: string | null
           phone: string | null
           shipping_status: string | null
@@ -148,7 +150,9 @@ export type Database = {
           courier_name?: string | null
           created_at?: string | null
           delivery_address?: Json | null
+          estimated_delivery_date?: string | null
           id?: string
+          notes?: string | null
           payment_method?: string | null
           phone?: string | null
           shipping_status?: string | null
@@ -163,7 +167,9 @@ export type Database = {
           courier_name?: string | null
           created_at?: string | null
           delivery_address?: Json | null
+          estimated_delivery_date?: string | null
           id?: string
+          notes?: string | null
           payment_method?: string | null
           phone?: string | null
           shipping_status?: string | null

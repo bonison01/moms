@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, Package, Truck, Phone, MapPin, Search } from 'lucide-react';
+import { Edit, Save, X, Package, Truck, Phone, Search } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -53,6 +53,7 @@ const OrderManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editingOrder, setEditingOrder] = useState<EditingOrder | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -170,81 +171,88 @@ const OrderManagement = () => {
   };
 
   const handleSave = async () => {
-    if (!editingOrder) return;
+    if (!editingOrder || saving) return;
 
+    setSaving(true);
     try {
-      console.log('Attempting to update order with ID:', editingOrder.id);
-      console.log('Update data:', {
+      console.log('=== STARTING ORDER UPDATE ===');
+      console.log('Order ID:', editingOrder.id);
+      console.log('Data to update:', {
         status: editingOrder.status,
         shipping_status: editingOrder.shipping_status,
         courier_name: editingOrder.courier_name || null,
         courier_contact: editingOrder.courier_contact || null,
         tracking_id: editingOrder.tracking_id || null,
       });
-      
-      // Update the order in the database with explicit column names
-      const { data, error } = await supabase
-        .from('orders')
-        .update({
-          status: editingOrder.status,
-          shipping_status: editingOrder.shipping_status,
-          courier_name: editingOrder.courier_name || null,
-          courier_contact: editingOrder.courier_contact || null,
-          tracking_id: editingOrder.tracking_id || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', editingOrder.id)
-        .select('*');
 
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
+      // Create the update object with all fields explicitly
+      const updateData = {
+        status: editingOrder.status,
+        shipping_status: editingOrder.shipping_status,
+        courier_name: editingOrder.courier_name || null,
+        courier_contact: editingOrder.courier_contact || null,
+        tracking_id: editingOrder.tracking_id || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      console.log('Prepared update data:', updateData);
+
+      // Perform the update with detailed logging
+      const { data: updateResult, error: updateError } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', editingOrder.id)
+        .select('id, status, shipping_status, courier_name, courier_contact, tracking_id');
+
+      console.log('Update response:', { updateResult, updateError });
+
+      if (updateError) {
+        console.error('Database update failed:', updateError);
+        throw new Error(`Update failed: ${updateError.message}`);
       }
 
-      console.log('Update successful, database returned:', data);
-
-      // Verify the update by fetching the specific order
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('orders')
-        .select('id, status, shipping_status, courier_name, courier_contact, tracking_id')
-        .eq('id', editingOrder.id)
-        .single();
-
-      if (verifyError) {
-        console.error('Verification fetch error:', verifyError);
-      } else {
-        console.log('Verification data from database:', verifyData);
+      if (!updateResult || updateResult.length === 0) {
+        throw new Error('No rows were updated. Order may not exist.');
       }
 
-      // Update local state immediately to prevent reverting
+      console.log('Update successful. Updated data:', updateResult[0]);
+
+      // Update the local state with the actual data from database
+      const updatedOrder = updateResult[0];
       setOrders(prevOrders => 
         prevOrders.map(order => 
           order.id === editingOrder.id 
             ? {
                 ...order,
-                status: editingOrder.status,
-                shipping_status: editingOrder.shipping_status,
-                courier_name: editingOrder.courier_name,
-                courier_contact: editingOrder.courier_contact,
-                tracking_id: editingOrder.tracking_id,
+                status: updatedOrder.status,
+                shipping_status: updatedOrder.shipping_status,
+                courier_name: updatedOrder.courier_name,
+                courier_contact: updatedOrder.courier_contact,
+                tracking_id: updatedOrder.tracking_id,
               }
             : order
         )
       );
 
       setEditingOrder(null);
+      
       toast({
         title: "Success",
         description: "Order updated successfully",
       });
 
+      console.log('=== ORDER UPDATE COMPLETED ===');
+
     } catch (error: any) {
-      console.error('Error updating order:', error);
+      console.error('=== ORDER UPDATE FAILED ===');
+      console.error('Error details:', error);
       toast({
         title: "Error",
         description: `Failed to update order: ${error.message}`,
         variant: "destructive",
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -473,10 +481,21 @@ const OrderManagement = () => {
                     <TableCell>
                       {editingOrder?.id === order.id ? (
                         <div className="flex space-x-1">
-                          <Button onClick={handleSave} size="sm" variant="default">
+                          <Button 
+                            onClick={handleSave} 
+                            size="sm" 
+                            variant="default"
+                            disabled={saving}
+                          >
                             <Save className="h-3 w-3" />
+                            {saving && <span className="ml-1">...</span>}
                           </Button>
-                          <Button onClick={handleCancelEdit} size="sm" variant="outline">
+                          <Button 
+                            onClick={handleCancelEdit} 
+                            size="sm" 
+                            variant="outline"
+                            disabled={saving}
+                          >
                             <X className="h-3 w-3" />
                           </Button>
                         </div>

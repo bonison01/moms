@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -177,15 +176,8 @@ const OrderManagement = () => {
     try {
       console.log('=== STARTING ORDER UPDATE ===');
       console.log('Order ID:', editingOrder.id);
-      console.log('Data to update:', {
-        status: editingOrder.status,
-        shipping_status: editingOrder.shipping_status,
-        courier_name: editingOrder.courier_name || null,
-        courier_contact: editingOrder.courier_contact || null,
-        tracking_id: editingOrder.tracking_id || null,
-      });
-
-      // Create the update object with all fields explicitly
+      
+      // Prepare update data - ensure we only send what can be updated
       const updateData = {
         status: editingOrder.status,
         shipping_status: editingOrder.shipping_status,
@@ -195,16 +187,43 @@ const OrderManagement = () => {
         updated_at: new Date().toISOString(),
       };
 
-      console.log('Prepared update data:', updateData);
+      console.log('Update data:', updateData);
 
-      // Perform the update with detailed logging
+      // First verify the order exists and user is admin
+      const { data: currentUser } = await supabase.auth.getUser();
+      console.log('Current user:', currentUser?.user?.id);
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUser?.user?.id)
+        .single();
+      
+      console.log('User profile:', profile);
+
+      // Check if order exists
+      const { data: existingOrder, error: checkError } = await supabase
+        .from('orders')
+        .select('id, status, shipping_status')
+        .eq('id', editingOrder.id)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking order existence:', checkError);
+        throw new Error(`Order not found: ${checkError.message}`);
+      }
+
+      console.log('Existing order:', existingOrder);
+
+      // Perform the update
       const { data: updateResult, error: updateError } = await supabase
         .from('orders')
         .update(updateData)
         .eq('id', editingOrder.id)
-        .select('id, status, shipping_status, courier_name, courier_contact, tracking_id');
+        .select('*');
 
-      console.log('Update response:', { updateResult, updateError });
+      console.log('Update result:', updateResult);
+      console.log('Update error:', updateError);
 
       if (updateError) {
         console.error('Database update failed:', updateError);
@@ -212,12 +231,12 @@ const OrderManagement = () => {
       }
 
       if (!updateResult || updateResult.length === 0) {
-        throw new Error('No rows were updated. Order may not exist.');
+        throw new Error('No rows were updated. Order may not exist or you may not have permission.');
       }
 
-      console.log('Update successful. Updated data:', updateResult[0]);
+      console.log('Update successful:', updateResult[0]);
 
-      // Update the local state with the actual data from database
+      // Update the local state
       const updatedOrder = updateResult[0];
       setOrders(prevOrders => 
         prevOrders.map(order => 

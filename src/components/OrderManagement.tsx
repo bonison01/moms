@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,7 +87,16 @@ const OrderManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      
+      // Type assertion to handle the Supabase response correctly
+      const ordersData = (data || []) as any[];
+      const typedOrders: Order[] = ordersData.map(order => ({
+        ...order,
+        profiles: order.profiles || null,
+        order_items: order.order_items || []
+      }));
+      
+      setOrders(typedOrders);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       toast({

@@ -40,9 +40,16 @@ const FeaturedProducts = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-gray-200 animate-pulse aspect-square rounded-lg"></div>
+          <div key={i} className="bg-gray-200 animate-pulse rounded-lg">
+            <div className="aspect-[4/3] w-full rounded-t-lg bg-gray-300"></div>
+            <div className="p-4 space-y-3">
+              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+              <div className="h-6 bg-gray-300 rounded w-1/3"></div>
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -51,20 +58,20 @@ const FeaturedProducts = () => {
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">No featured products available</p>
+        <p className="text-gray-500 text-lg">No featured products available</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
       {products.map((product) => (
-        <div key={product.id} className="aspect-square">
+        <div key={product.id} className="group">
           <ProductCard
             {...product}
-            className="h-full"
-            imageClassName="aspect-square object-cover"
-            showFullDescription={false}
+            className="h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+            imageClassName="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            showFullDescription={true}
           />
         </div>
       ))}

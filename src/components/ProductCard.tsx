@@ -26,7 +26,7 @@ const ProductCard = ({
   description, 
   features,
   className = "",
-  imageClassName = "h-48 w-full object-cover",
+  imageClassName = "aspect-[4/3] w-full object-cover",
   showFullDescription = true
 }: ProductCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -66,48 +66,50 @@ const ProductCard = ({
     }
   };
 
-  const truncatedDescription = description && description.length > 80 
-    ? description.substring(0, 80) + '...' 
+  const truncatedDescription = description && description.length > 100 
+    ? description.substring(0, 100) + '...' 
     : description;
 
   return (
     <Link to={`/product/${id}`} className={`block ${className}`}>
-      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 group h-full flex flex-col">
-        <div className="relative overflow-hidden rounded-t-lg">
+      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 group h-full flex flex-col overflow-hidden">
+        <div className="relative overflow-hidden">
           <img
             src={image_url || '/placeholder.svg'}
             alt={name}
-            className={`${imageClassName} group-hover:scale-105 transition-transform duration-300`}
+            className={`${imageClassName}`}
+            loading="lazy"
           />
-          <div className="absolute top-2 right-2 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-semibold">
+          <div className="absolute top-3 right-3 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-semibold shadow-sm">
             ⭐ 4.9
           </div>
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
         </div>
         
-        <div className="p-4 flex-1 flex flex-col">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-black transition-colors line-clamp-2">
+        <div className="p-4 lg:p-5 flex-1 flex flex-col">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-800 mb-2 group-hover:text-black transition-colors line-clamp-2 leading-tight">
             {name}
           </h3>
           
           {showFullDescription && description && (
-            <p className="text-gray-600 text-sm mb-3 flex-1">
+            <p className="text-gray-600 text-sm lg:text-base mb-3 flex-1 leading-relaxed">
               {truncatedDescription}
             </p>
           )}
           
           {features && features.length > 0 && (
-            <div className="mb-3">
-              <div className="flex flex-wrap gap-1">
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-1.5">
                 {features.slice(0, 2).map((feature, index) => (
                   <span
                     key={index}
-                    className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full"
+                    className="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-medium"
                   >
                     {feature}
                   </span>
                 ))}
                 {features.length > 2 && (
-                  <span className="text-gray-500 text-xs px-2 py-1">
+                  <span className="text-gray-500 text-xs px-2.5 py-1 font-medium">
                     +{features.length - 2} more
                   </span>
                 )}
@@ -115,16 +117,17 @@ const ProductCard = ({
             </div>
           )}
           
-          <div className="flex items-center justify-between mt-auto">
-            <div className="text-xl font-bold text-black">
-              ₹{price}
+          <div className="flex items-center justify-between mt-auto pt-2">
+            <div className="text-xl lg:text-2xl font-bold text-black">
+              ₹{price.toLocaleString()}
             </div>
             <button
               onClick={handleAddToCart}
               disabled={isLoading}
-              className="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-black text-white p-2.5 lg:p-3 rounded-full hover:bg-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105"
+              aria-label={`Add ${name} to cart`}
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-4 w-4 lg:h-5 lg:w-5" />
             </button>
           </div>
         </div>

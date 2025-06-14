@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash, Save, X, Package, LogOut, Home } from 'lucide-react';
 import OrderManagement from '@/components/OrderManagement';
 import ImageUpload from '@/components/ImageUpload';
+import { Switch } from '@/components/ui/switch';
 
 interface Product {
   id: string;
@@ -27,6 +27,7 @@ interface Product {
   offers: string | null;
   stock_quantity: number | null;
   is_active: boolean | null;
+  featured: boolean | null;
 }
 
 const ProductManagement = () => {
@@ -50,6 +51,7 @@ const ProductManagement = () => {
     offers: null,
     stock_quantity: null,
     is_active: null,
+    featured: null,
   });
 
   // Redirect if not admin
@@ -215,6 +217,7 @@ const ProductManagement = () => {
         offers: null,
         stock_quantity: null,
         is_active: null,
+        featured: null,
       });
       toast({
         title: "Success",
@@ -306,8 +309,17 @@ const ProductManagement = () => {
                   {products.map((product) => (
                     <Card key={product.id}>
                       <CardHeader>
-                        <CardTitle>{product.name}</CardTitle>
-                        <CardDescription>Price: ₹{product.price}</CardDescription>
+                        <CardTitle className="flex items-center justify-between">
+                          {product.name}
+                          {product.featured && (
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              Featured
+                            </span>
+                          )}
+                        </CardTitle>
+                        <CardDescription>
+                          Price: ₹{product.price} | Stock: {product.stock_quantity || 0}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <img src={product.image_url || '/placeholder-image.png'} alt={product.name} className="w-full h-48 object-cover mb-4 rounded-md" />
@@ -379,6 +391,31 @@ const ProductManagement = () => {
                           value={editingProduct.price}
                           onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })}
                         />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="stock_quantity">Stock Quantity</Label>
+                        <Input
+                          id="stock_quantity"
+                          type="number"
+                          value={editingProduct.stock_quantity || 0}
+                          onChange={(e) => setEditingProduct({ ...editingProduct, stock_quantity: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="featured"
+                          checked={editingProduct.featured || false}
+                          onCheckedChange={(checked) => setEditingProduct({ ...editingProduct, featured: checked })}
+                        />
+                        <Label htmlFor="featured">Featured Product</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is_active"
+                          checked={editingProduct.is_active || false}
+                          onCheckedChange={(checked) => setEditingProduct({ ...editingProduct, is_active: checked })}
+                        />
+                        <Label htmlFor="is_active">Active Product</Label>
                       </div>
                       <Button onClick={() => handleUpdate(editingProduct)}>
                         <Save className="h-4 w-4 mr-2" />
@@ -470,15 +507,27 @@ const ProductManagement = () => {
                           onChange={handleInputChange}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new-is_active">Is Active</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          id="new-featured"
+                          type="checkbox"
+                          name="featured"
+                          checked={newProduct.featured || false}
+                          onChange={handleCheckboxChange}
+                          className="w-4 h-4"
+                        />
+                        <Label htmlFor="new-featured">Featured Product</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
                         <Input
                           id="new-is_active"
                           type="checkbox"
                           name="is_active"
                           checked={newProduct.is_active || false}
                           onChange={handleCheckboxChange}
+                          className="w-4 h-4"
                         />
+                        <Label htmlFor="new-is_active">Is Active</Label>
                       </div>
                       <Button onClick={handleCreate}>
                         <Plus className="h-4 w-4 mr-2" />

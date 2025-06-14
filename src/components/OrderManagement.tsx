@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, Package, Truck, Phone, MapPin } from 'lucide-react';
+import { Edit, Save, X, Package, Truck, Phone, MapPin, Search } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -47,12 +47,27 @@ interface EditingOrder {
 const OrderManagement = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingOrder, setEditingOrder] = useState<EditingOrder | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    // Filter orders based on search term
+    if (searchTerm.trim() === '') {
+      setFilteredOrders(orders);
+    } else {
+      const filtered = orders.filter(order => 
+        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.id.slice(0, 8).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredOrders(filtered);
+    }
+  }, [orders, searchTerm]);
 
   const fetchOrders = async () => {
     try {
@@ -139,18 +154,26 @@ const OrderManagement = () => {
     if (!editingOrder) return;
 
     try {
-      const { error } = await supabase
+      console.log('Updating order with data:', editingOrder);
+      
+      const { data, error } = await supabase
         .from('orders')
         .update({
           shipping_status: editingOrder.shipping_status,
-          courier_name: editingOrder.courier_name,
-          courier_contact: editingOrder.courier_contact,
-          tracking_id: editingOrder.tracking_id,
+          courier_name: editingOrder.courier_name || null,
+          courier_contact: editingOrder.courier_contact || null,
+          tracking_id: editingOrder.tracking_id || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', editingOrder.id);
+        .eq('id', editingOrder.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Update successful:', data);
 
       // Update local state
       setOrders(orders.map(order => 
@@ -174,7 +197,7 @@ const OrderManagement = () => {
       console.error('Error updating order:', error);
       toast({
         title: "Error",
-        description: "Failed to update order",
+        description: `Failed to update order: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -219,9 +242,29 @@ const OrderManagement = () => {
           <span>Order Management</span>
         </CardTitle>
         <CardDescription>Manage orders and shipping status</CardDescription>
+        
+        {/* Search functionality */}
+        <div className="flex items-center space-x-2 mt-4">
+          <Search className="h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search by Order ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          {searchTerm && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearchTerm('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
-        {orders.length > 0 ? (
+        {filteredOrders.length > 0 ? (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -237,7 +280,7 @@ const OrderManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
+                {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
                       #{order.id.slice(0, 8)}
@@ -372,9 +415,19 @@ const OrderManagement = () => {
           </div>
         ) : (
           <div className="text-center py-8">
-            <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-            <p className="text-gray-500">Orders will appear here when customers place them.</p>
+            {searchTerm ? (
+              <>
+                <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                <p className="text-gray-500">No orders match your search criteria.</p>
+              </>
+            ) : (
+              <>
+                <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                <p className="text-gray-500">Orders will appear here when customers place them.</p>
+              </>
+            )}
           </div>
         )}
       </CardContent>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuthContext';
 import { Button } from '@/components/ui/button';
@@ -37,13 +37,21 @@ const Auth = () => {
   /**
    * Redirect authenticated users to appropriate dashboard
    */
-  const redirectToDashboard = () => {
-    if (isAdmin) {
-      navigate('/admin', { replace: true });
-    } else {
-      navigate('/dashboard', { replace: true });
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      console.log('🔄 User authenticated, redirecting...', { isAdmin, isAdminMode });
+      
+      if (isAdmin) {
+        navigate('/admin', { replace: true });
+      } else if (isAdminMode) {
+        // If they're trying to access admin but aren't admin, show error
+        setError('You do not have admin privileges');
+        return;
+      } else {
+        navigate('/customer-dashboard', { replace: true });
+      }
     }
-  };
+  }, [isAuthenticated, isAdmin, loading, navigate, isAdminMode]);
 
   /**
    * Reset form fields

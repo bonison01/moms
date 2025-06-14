@@ -79,6 +79,40 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Customer Login Section */}
+      <section className="py-12 bg-blue-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+            Already a Customer?
+          </h2>
+          <p className="text-lg text-gray-600 mb-6">
+            Sign in to your account to track orders, save favorites, and enjoy a personalized shopping experience.
+          </p>
+          <div className="space-x-4">
+            <Link
+              to="/auth"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-block"
+            >
+              Customer Login
+            </Link>
+            <Link
+              to="/auth"
+              className="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors inline-block"
+            >
+              Create Account
+            </Link>
+          </div>
+          <div className="mt-4">
+            <Link
+              to="/auth?admin=true"
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Admin Login →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Products */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

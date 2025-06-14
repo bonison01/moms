@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 const Reviews = () => {
   const [activeTab, setActiveTab] = useState<'testimonials' | 'customer-reviews'>('testimonials');
   const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   const handleReviewSubmitted = () => {
     setReviewsRefreshTrigger(prev => prev + 1);
+    setShowReviewForm(false);
   };
 
   const reviews = [
@@ -157,7 +159,10 @@ const Reviews = () => {
                     Your feedback helps us continue to improve and helps other customers 
                     make informed decisions.
                   </p>
-                  <button className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+                  <button 
+                    onClick={() => setShowReviewForm(true)}
+                    className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                  >
                     Write a Review
                   </button>
                 </div>
@@ -193,6 +198,26 @@ const Reviews = () => {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Review Form Modal/Overlay for testimonials tab */}
+      {showReviewForm && activeTab === 'testimonials' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Write a Review</h2>
+                <button 
+                  onClick={() => setShowReviewForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <ReviewForm onReviewSubmitted={handleReviewSubmitted} />
+            </div>
+          </div>
+        </div>
       )}
     </Layout>
   );

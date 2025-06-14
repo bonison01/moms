@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User } from 'lucide-react';
@@ -41,7 +40,7 @@ const Navbar = () => {
     <>
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
       
-      <nav className="bg-gradient-to-r from-blue-900 to-black shadow-lg sticky top-0 z-40">
+      <nav className="bg-gray-900 shadow-lg sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -118,7 +117,7 @@ const Navbar = () => {
         {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gradient-to-r from-blue-900 to-black shadow-lg">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-900 shadow-lg">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}

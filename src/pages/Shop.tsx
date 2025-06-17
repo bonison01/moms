@@ -72,23 +72,23 @@ const Shop = () => {
   };
 
   const handleBuyNow = async (product: Product) => {
-    // For guests, show a friendly message but don't redirect automatically
-    if (!isAuthenticated) {
-      toast({
-        title: "Sign In to Purchase",
-        description: "Create an account or sign in to complete your purchase.",
-        variant: "default",
+    // For authenticated users, add to cart and navigate to checkout
+    if (isAuthenticated) {
+      await addToCart(product.id, quantities[product.id] || 1);
+      navigate('/checkout');
+    } else {
+      // For guests, navigate directly to checkout
+      navigate('/checkout', { 
+        state: { 
+          guestCheckout: true,
+          product: product,
+          quantity: quantities[product.id] || 1
+        }
       });
-      return;
     }
-
-    // Add to cart and then navigate to checkout for authenticated users
-    await addToCart(product.id, quantities[product.id] || 1);
-    navigate('/checkout');
   };
 
   const handleAddToCart = async (product: Product) => {
-    // For guests, show a friendly message but don't redirect automatically
     if (!isAuthenticated) {
       toast({
         title: "Sign In to Add to Cart",
@@ -221,7 +221,7 @@ const Shop = () => {
                         )}
                       </div>
                       
-                      {/* Quantity Selector - Always show */}
+                      {/* Quantity Selector */}
                       <div className="flex items-center justify-center space-x-1 md:space-x-2 mb-2 md:mb-4">
                         <Button
                           variant="outline"
@@ -243,7 +243,7 @@ const Shop = () => {
                         </Button>
                       </div>
                       
-                      {/* Action Buttons - Show for everyone */}
+                      {/* Action Buttons */}
                       <div className="space-y-1 md:space-y-2">
                         <Button
                           onClick={() => handleBuyNow(product)}

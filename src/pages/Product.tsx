@@ -1,3 +1,4 @@
+
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,29 +97,32 @@ const Product = () => {
   };
 
   const handleBuyNow = async () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Sign In to Purchase",
-        description: "Create an account or sign in to complete your purchase.",
-        variant: "default",
-      });
-      return;
-    }
-
     if (!product) return;
 
-    try {
-      await addToCart(product.id, quantity);
-      navigate('/checkout');
-      toast({
-        title: "Redirecting to Checkout",
-        description: `${quantity} x ${product.name} added to cart`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add item to cart",
-        variant: "destructive",
+    // For authenticated users, add to cart and navigate to checkout
+    if (isAuthenticated) {
+      try {
+        await addToCart(product.id, quantity);
+        navigate('/checkout');
+        toast({
+          title: "Redirecting to Checkout",
+          description: `${quantity} x ${product.name} added to cart`,
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to add item to cart",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // For guests, navigate directly to checkout
+      navigate('/checkout', { 
+        state: { 
+          guestCheckout: true,
+          product: product,
+          quantity: quantity
+        }
       });
     }
   };
@@ -222,7 +226,7 @@ const Product = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-blue-600" />
-                  <span className="text-blue-800 font-medium">Sign in to purchase and save to cart</span>
+                  <span className="text-blue-800 font-medium">Sign in to save items to cart and track orders</span>
                 </div>
                 <Button 
                   onClick={() => navigate('/auth')}
@@ -315,7 +319,7 @@ const Product = () => {
                 )}
               </div>
 
-              {/* Quantity Selector - Always show */}
+              {/* Quantity Selector */}
               <div className="mb-8">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Quantity
@@ -345,7 +349,7 @@ const Product = () => {
                 </div>
               </div>
 
-              {/* Action Buttons - Always show, no blocking */}
+              {/* Action Buttons */}
               <div className="space-y-4 mb-8">
                 <Button
                   onClick={handleBuyNow}

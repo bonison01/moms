@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuthContext';
@@ -6,13 +5,14 @@ import { useCart } from '@/hooks/useCartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
+import OrderConfirmationModal from '@/components/OrderConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, CreditCard, Truck, User } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, User, Mail } from 'lucide-react';
 
 interface UserProfile {
   full_name?: string;
@@ -45,6 +45,8 @@ const Checkout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({});
   const [saveProfile, setSaveProfile] = useState(true);
+  const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
+  const [confirmedOrderData, setConfirmedOrderData] = useState<any>(null);
   
   // Guest checkout data from navigation state
   const guestCheckoutData = location.state as { guestCheckout?: boolean; product?: any; quantity?: number } | null;
@@ -56,6 +58,7 @@ const Checkout = () => {
 
   const [formData, setFormData] = useState({
     full_name: '',
+    email: '',
     address_line_1: '',
     address_line_2: '',
     city: '',
@@ -109,6 +112,7 @@ const Checkout = () => {
         setProfile(data);
         setFormData({
           full_name: data.full_name || '',
+          email: user.email || '',
           address_line_1: data.address_line_1 || '',
           address_line_2: data.address_line_2 || '',
           city: data.city || '',
@@ -130,7 +134,7 @@ const Checkout = () => {
   };
 
   const validateForm = () => {
-    const required = ['full_name', 'address_line_1', 'city', 'state', 'postal_code', 'phone'];
+    const required = ['full_name', 'email', 'address_line_1', 'city', 'state', 'postal_code', 'phone'];
     const missing = required.filter(field => !formData[field as keyof typeof formData]?.trim());
     
     if (missing.length > 0) {
@@ -141,8 +145,46 @@ const Checkout = () => {
       });
       return false;
     }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return false;
+    }
     
     return true;
+  };
+
+  const sendOrderConfirmationEmail = async (orderData: any, email: string) => {
+    try {
+      console.log('📧 Sending order confirmation email to:', email);
+      
+      const { error } = await supabase.functions.invoke('send-order-confirmation', {
+        body: {
+          email,
+          orderData
+        }
+      });
+
+      if (error) {
+        console.error('❌ Email sending error:', error);
+        toast({
+          title: "Email Warning",
+          description: "Order placed successfully, but confirmation email could not be sent.",
+          variant: "default",
+        });
+      } else {
+        console.log('✅ Order confirmation email sent successfully');
+      }
+    } catch (error) {
+      console.error('❌ Email sending exception:', error);
+      // Don't show error to user as order was successful
+    }
   };
 
   const handlePlaceOrder = async () => {
@@ -215,7 +257,7 @@ const Checkout = () => {
         }
       }
 
-      // Create order - simplified with new permissive RLS policies
+      // Create order
       const orderData = {
         user_id: isAuthenticated && user ? user.id : null,
         total_amount: totalAmount,
@@ -263,22 +305,47 @@ const Checkout = () => {
 
       console.log('✅ Order items created successfully');
 
+      // Fetch complete order data for confirmation
+      const { data: completeOrder, error: fetchError } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items(
+            id,
+            quantity,
+            price,
+            product:products(name, image_url)
+          )
+        `)
+        .eq('id', order.id)
+        .single();
+
+      if (fetchError) {
+        console.error('❌ Error fetching complete order:', fetchError);
+      }
+
+      // Send confirmation email
+      await sendOrderConfirmationEmail(completeOrder || order, formData.email);
+
       // Clear cart only for authenticated users
       if (isAuthenticated && !isGuestCheckout) {
         await clearCart();
       }
 
+      // Show order confirmation modal
+      setConfirmedOrderData(completeOrder || {
+        ...order,
+        order_items: orderItems.map((item, index) => ({
+          ...item,
+          product: isGuestCheckout && guestItem ? guestItem.product : cartItems[index]?.product
+        }))
+      });
+      setShowOrderConfirmation(true);
+
       toast({
         title: "Order Placed Successfully! 🎉",
-        description: `Order #${order.id.slice(0, 8)} has been placed for ₹${totalAmount}. You will receive a confirmation shortly.`,
+        description: `Order #${order.id.slice(0, 8)} has been placed for ₹${totalAmount}. Confirmation email sent to ${formData.email}.`,
       });
-
-      // Navigate based on user type
-      if (isAuthenticated) {
-        navigate('/customer-dashboard');
-      } else {
-        navigate('/shop');
-      }
 
     } catch (error: any) {
       console.error('❌ Checkout error:', error);
@@ -290,6 +357,18 @@ const Checkout = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOrderConfirmationClose = () => {
+    setShowOrderConfirmation(false);
+    setConfirmedOrderData(null);
+    
+    // Navigate based on user type
+    if (isAuthenticated) {
+      navigate('/customer-dashboard');
+    } else {
+      navigate('/shop');
     }
   };
 
@@ -399,6 +478,22 @@ const Checkout = () => {
                     placeholder="Enter your full name"
                     required
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="email">Email Address *</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="Enter your email address"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -535,6 +630,14 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+
+      {/* Order Confirmation Modal */}
+      <OrderConfirmationModal
+        isOpen={showOrderConfirmation}
+        onClose={handleOrderConfirmationClose}
+        orderData={confirmedOrderData}
+        customerEmail={formData.email}
+      />
     </Layout>
   );
 };

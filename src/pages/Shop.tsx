@@ -74,7 +74,7 @@ const Shop = () => {
   const handleBuyNow = async (product: Product) => {
     if (!isAuthenticated) {
       toast({
-        title: "Authentication Required",
+        title: "Sign In Required",
         description: "Please sign in to purchase products.",
         variant: "destructive",
       });
@@ -90,7 +90,7 @@ const Shop = () => {
   const handleAddToCart = async (product: Product) => {
     if (!isAuthenticated) {
       toast({
-        title: "Authentication Required",
+        title: "Sign In Required",
         description: "Please sign in to add items to cart.",
         variant: "destructive",
       });
@@ -108,15 +108,28 @@ const Shop = () => {
     }));
   };
 
+  const handleCartClick = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to view your cart.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    setCartOpen(true);
+  };
+
   return (
     <Layout>
       {/* Cart Sidebar */}
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
 
-      {/* Cart Button - Fixed Position */}
+      {/* Cart Button - Fixed Position - Only show for authenticated users */}
       {isAuthenticated && (
         <Button
-          onClick={() => setCartOpen(true)}
+          onClick={handleCartClick}
           className="fixed bottom-6 right-6 z-40 rounded-full h-14 w-14 bg-black text-white hover:bg-gray-800 shadow-lg"
         >
           <ShoppingCart className="h-6 w-6" />
@@ -132,7 +145,7 @@ const Shop = () => {
       <section className="bg-gradient-to-r from-black to-gray-800 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Products</h1>
-          <p className="text-xl md:text-2xl max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-8">
             Discover our carefully crafted collection of traditional foods
           </p>
           
@@ -145,7 +158,7 @@ const Shop = () => {
                   <span>Welcome back, {user?.email}</span>
                 </div>
                 <Button 
-                  onClick={() => setCartOpen(true)}
+                  onClick={handleCartClick}
                   variant="outline"
                   className="text-white border-white hover:bg-white hover:text-black"
                 >
@@ -155,7 +168,7 @@ const Shop = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-yellow-300">Sign in to purchase products</p>
+                <p className="text-blue-200 text-lg">Browse our products freely • Sign in to purchase</p>
                 <Button 
                   onClick={() => navigate('/auth')}
                   variant="outline"
@@ -209,31 +222,29 @@ const Shop = () => {
                         )}
                       </div>
                       
-                      {/* Quantity Selector */}
-                      {isAuthenticated && (
-                        <div className="flex items-center justify-center space-x-1 md:space-x-2 mb-2 md:mb-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(product.id, -1)}
-                            disabled={quantities[product.id] <= 1}
-                            className="h-6 w-6 md:h-8 md:w-8 p-0"
-                          >
-                            <Minus className="w-2 h-2 md:w-3 md:h-3" />
-                          </Button>
-                          <span className="text-xs md:text-sm font-medium px-1 md:px-3">{quantities[product.id] || 1}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(product.id, 1)}
-                            className="h-6 w-6 md:h-8 md:w-8 p-0"
-                          >
-                            <Plus className="w-2 h-2 md:w-3 md:h-3" />
-                          </Button>
-                        </div>
-                      )}
+                      {/* Quantity Selector - Always show but indicate auth requirement */}
+                      <div className="flex items-center justify-center space-x-1 md:space-x-2 mb-2 md:mb-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateQuantity(product.id, -1)}
+                          disabled={quantities[product.id] <= 1}
+                          className="h-6 w-6 md:h-8 md:w-8 p-0"
+                        >
+                          <Minus className="w-2 h-2 md:w-3 md:h-3" />
+                        </Button>
+                        <span className="text-xs md:text-sm font-medium px-1 md:px-3">{quantities[product.id] || 1}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateQuantity(product.id, 1)}
+                          className="h-6 w-6 md:h-8 md:w-8 p-0"
+                        >
+                          <Plus className="w-2 h-2 md:w-3 md:h-3" />
+                        </Button>
+                      </div>
                       
-                      {/* Action Buttons */}
+                      {/* Action Buttons - Show for everyone, handle auth in click handlers */}
                       <div className="space-y-1 md:space-y-2">
                         <Button
                           onClick={() => handleBuyNow(product)}
@@ -276,7 +287,7 @@ const Shop = () => {
             </div>
           )}
           
-          {/* Coming Soon Section - only show if we have products */}
+          {/* Coming Soon Section */}
           {products.length > 0 && (
             <div className="mt-16 text-center">
               <div className="bg-gray-50 p-8 rounded-lg shadow-md max-w-md mx-auto border border-gray-200">

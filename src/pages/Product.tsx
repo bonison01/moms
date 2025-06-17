@@ -1,3 +1,4 @@
+
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -98,7 +99,7 @@ const Product = () => {
   const handleBuyNow = async () => {
     if (!isAuthenticated) {
       toast({
-        title: "Authentication Required",
+        title: "Sign In Required",
         description: "Please sign in to purchase this product.",
         variant: "destructive",
       });
@@ -127,7 +128,7 @@ const Product = () => {
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       toast({
-        title: "Authentication Required",
+        title: "Sign In Required",
         description: "Please sign in to add items to cart.",
         variant: "destructive",
       });
@@ -218,18 +219,18 @@ const Product = () => {
             </div>
           </nav>
 
-          {/* Authentication Status */}
+          {/* Guest Notice */}
           {!isAuthenticated && (
-            <div className="mb-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <div className="mb-8 bg-blue-50 border border-blue-200 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-yellow-600" />
-                  <span className="text-yellow-800 font-medium">Sign in to purchase this product</span>
+                  <User className="h-5 w-5 text-blue-600" />
+                  <span className="text-blue-800 font-medium">Sign in to purchase this product</span>
                 </div>
                 <Button 
                   onClick={() => navigate('/auth')}
                   size="sm"
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Sign In
                 </Button>
@@ -317,7 +318,7 @@ const Product = () => {
                 )}
               </div>
 
-              {/* Quantity Selector */}
+              {/* Quantity Selector - Always show */}
               <div className="mb-8">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Quantity

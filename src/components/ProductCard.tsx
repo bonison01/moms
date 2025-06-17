@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Star } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useCart } from '@/hooks/useCartContext';
@@ -35,6 +35,7 @@ const ProductCard = ({
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,10 +43,11 @@ const ProductCard = ({
     
     if (!isAuthenticated) {
       toast({
-        title: "Authentication Required",
+        title: "Sign In Required",
         description: "Please sign in to add items to cart",
         variant: "destructive",
       });
+      navigate('/auth');
       return;
     }
 
@@ -101,7 +103,11 @@ const ProductCard = ({
               <button
                 onClick={handleAddToCart}
                 disabled={isLoading}
-                className="bg-black text-white p-1.5 rounded-full hover:bg-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105"
+                className={`p-1.5 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105 ${
+                  isAuthenticated 
+                    ? 'bg-black text-white hover:bg-gray-800' 
+                    : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+                }`}
                 aria-label={`Add ${name} to cart`}
               >
                 <ShoppingCart className="h-3 w-3" />
@@ -167,7 +173,11 @@ const ProductCard = ({
             <button
               onClick={handleAddToCart}
               disabled={isLoading}
-              className="bg-black text-white p-2.5 lg:p-3 rounded-full hover:bg-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105"
+              className={`p-2.5 lg:p-3 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105 ${
+                isAuthenticated 
+                  ? 'bg-black text-white hover:bg-gray-800' 
+                  : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+              }`}
               aria-label={`Add ${name} to cart`}
             >
               <ShoppingCart className="h-4 w-4 lg:h-5 lg:w-5" />

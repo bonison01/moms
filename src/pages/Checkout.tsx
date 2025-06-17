@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuthContext';
@@ -207,7 +206,7 @@ const Checkout = () => {
         }
       }
 
-      // For guest users, explicitly set user_id to null
+      // Create order - simplified approach
       const orderData = {
         user_id: isAuthenticated && user ? user.id : null,
         total_amount: totalAmount,
@@ -219,44 +218,14 @@ const Checkout = () => {
 
       console.log('Creating order with data:', orderData);
 
-      // Use a more explicit approach for guest orders
-      let orderInsertResult;
-      
-      if (isGuestCheckout || !isAuthenticated) {
-        // For guest checkout, use a specific approach
-        orderInsertResult = await supabase
-          .from('orders')
-          .insert([{
-            user_id: null, // Explicitly set to null for guest orders
-            total_amount: totalAmount,
-            payment_method: paymentMethod,
-            delivery_address: deliveryAddress,
-            phone: formData.phone,
-            status: 'pending'
-          }])
-          .select()
-          .single();
-      } else {
-        // For authenticated users
-        orderInsertResult = await supabase
-          .from('orders')
-          .insert([orderData])
-          .select()
-          .single();
-      }
-
-      const { data: order, error: orderError } = orderInsertResult;
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select()
+        .single();
 
       if (orderError) {
         console.error('Error creating order:', orderError);
-        
-        // More specific error handling
-        if (orderError.code === '42501') {
-          console.error('RLS policy violation - checking auth state and policies');
-          console.log('Current auth state:', { isAuthenticated, user: user?.id });
-          throw new Error('Authentication issue - please try refreshing the page and try again');
-        }
-        
         throw new Error(`Order creation failed: ${orderError.message}`);
       }
 

@@ -215,7 +215,7 @@ const Checkout = () => {
         }
       }
 
-      // Create order with explicit handling for both authenticated and guest users
+      // Create order - simplified with new permissive RLS policies
       const orderData = {
         user_id: isAuthenticated && user ? user.id : null,
         total_amount: totalAmount,
@@ -227,50 +227,14 @@ const Checkout = () => {
 
       console.log('📦 Creating order with data:', orderData);
 
-      // Get current session to ensure we have the right auth context
-      const { data: session } = await supabase.auth.getSession();
-      console.log('🔐 Current session:', {
-        hasSession: !!session.session,
-        hasUser: !!session.session?.user,
-        userId: session.session?.user?.id
-      });
-
-      // Try to create the order with proper error handling
-      let orderResult;
-      try {
-        orderResult = await supabase
-          .from('orders')
-          .insert([orderData])
-          .select()
-          .single();
-      } catch (insertError: any) {
-        console.error('❌ Direct insert error:', insertError);
-        
-        // If RLS is still blocking, try a different approach
-        console.log('🔄 Attempting alternative order creation...');
-        
-        // For guest users, ensure we're not setting any user_id
-        const guestOrderData = {
-          ...orderData,
-          user_id: null // Explicitly set to null for guest orders
-        };
-        
-        orderResult = await supabase
-          .from('orders')
-          .insert([guestOrderData])
-          .select()
-          .single();
-      }
-
-      const { data: order, error: orderError } = orderResult;
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select()
+        .single();
 
       if (orderError) {
-        console.error('❌ Final order error:', {
-          message: orderError.message,
-          details: orderError.details,
-          hint: orderError.hint,
-          code: orderError.code
-        });
+        console.error('❌ Order creation error:', orderError);
         throw new Error(`Order creation failed: ${orderError.message}`);
       }
 
@@ -293,12 +257,7 @@ const Checkout = () => {
         .insert(orderItemsWithOrderId);
 
       if (itemsError) {
-        console.error('❌ Order items error:', {
-          message: itemsError.message,
-          details: itemsError.details,
-          hint: itemsError.hint,
-          code: itemsError.code
-        });
+        console.error('❌ Order items error:', itemsError);
         throw new Error(`Order items creation failed: ${itemsError.message}`);
       }
 
@@ -322,24 +281,11 @@ const Checkout = () => {
       }
 
     } catch (error: any) {
-      console.error('❌ Checkout error details:', {
-        error: error,
-        message: error.message,
-        stack: error.stack
-      });
-      
-      // Provide user-friendly error messages
-      let errorMessage = "There was an error processing your order. Please try again.";
-      
-      if (error.message?.includes('row-level security')) {
-        errorMessage = "There was a security issue processing your order. Please refresh the page and try again.";
-      } else if (error.message?.includes('network')) {
-        errorMessage = "Network error. Please check your connection and try again.";
-      }
+      console.error('❌ Checkout error:', error);
       
       toast({
         title: "Checkout Failed",
-        description: errorMessage,
+        description: error.message || "There was an error processing your order. Please try again.",
         variant: "destructive",
       });
     } finally {

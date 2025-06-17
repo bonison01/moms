@@ -1,4 +1,3 @@
-
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -99,11 +98,10 @@ const Product = () => {
   const handleBuyNow = async () => {
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
-        description: "Please sign in to purchase this product.",
-        variant: "destructive",
+        title: "Sign In to Purchase",
+        description: "Create an account or sign in to complete your purchase.",
+        variant: "default",
       });
-      navigate('/auth');
       return;
     }
 
@@ -128,11 +126,10 @@ const Product = () => {
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
-        description: "Please sign in to add items to cart.",
-        variant: "destructive",
+        title: "Sign In to Add to Cart",
+        description: "Create an account or sign in to save items to your cart.",
+        variant: "default",
       });
-      navigate('/auth');
       return;
     }
 
@@ -219,13 +216,13 @@ const Product = () => {
             </div>
           </nav>
 
-          {/* Guest Notice */}
+          {/* Guest Notice - Only shown as gentle information */}
           {!isAuthenticated && (
             <div className="mb-8 bg-blue-50 border border-blue-200 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-blue-600" />
-                  <span className="text-blue-800 font-medium">Sign in to purchase this product</span>
+                  <span className="text-blue-800 font-medium">Sign in to purchase and save to cart</span>
                 </div>
                 <Button 
                   onClick={() => navigate('/auth')}
@@ -348,7 +345,7 @@ const Product = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons - Always show, no blocking */}
               <div className="space-y-4 mb-8">
                 <Button
                   onClick={handleBuyNow}

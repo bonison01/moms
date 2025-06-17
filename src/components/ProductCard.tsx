@@ -43,11 +43,10 @@ const ProductCard = ({
     
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
-        description: "Please sign in to add items to cart",
-        variant: "destructive",
+        title: "Sign In to Add to Cart",
+        description: "Create an account or sign in to save items to your cart.",
+        variant: "default",
       });
-      navigate('/auth');
       return;
     }
 
@@ -103,11 +102,7 @@ const ProductCard = ({
               <button
                 onClick={handleAddToCart}
                 disabled={isLoading}
-                className={`p-1.5 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105 ${
-                  isAuthenticated 
-                    ? 'bg-black text-white hover:bg-gray-800' 
-                    : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
-                }`}
+                className="p-1.5 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105 bg-black text-white hover:bg-gray-800"
                 aria-label={`Add ${name} to cart`}
               >
                 <ShoppingCart className="h-3 w-3" />
@@ -173,11 +168,7 @@ const ProductCard = ({
             <button
               onClick={handleAddToCart}
               disabled={isLoading}
-              className={`p-2.5 lg:p-3 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105 ${
-                isAuthenticated 
-                  ? 'bg-black text-white hover:bg-gray-800' 
-                  : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
-              }`}
+              className="p-2.5 lg:p-3 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:scale-105 bg-black text-white hover:bg-gray-800"
               aria-label={`Add ${name} to cart`}
             >
               <ShoppingCart className="h-4 w-4 lg:h-5 lg:w-5" />

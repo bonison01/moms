@@ -72,29 +72,29 @@ const Shop = () => {
   };
 
   const handleBuyNow = async (product: Product) => {
+    // For guests, show a friendly message but don't redirect automatically
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
-        description: "Please sign in to purchase products.",
-        variant: "destructive",
+        title: "Sign In to Purchase",
+        description: "Create an account or sign in to complete your purchase.",
+        variant: "default",
       });
-      navigate('/auth');
       return;
     }
 
-    // Add to cart and then navigate to checkout
+    // Add to cart and then navigate to checkout for authenticated users
     await addToCart(product.id, quantities[product.id] || 1);
     navigate('/checkout');
   };
 
   const handleAddToCart = async (product: Product) => {
+    // For guests, show a friendly message but don't redirect automatically
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
-        description: "Please sign in to add items to cart.",
-        variant: "destructive",
+        title: "Sign In to Add to Cart",
+        description: "Create an account or sign in to save items to your cart.",
+        variant: "default",
       });
-      navigate('/auth');
       return;
     }
 
@@ -111,11 +111,10 @@ const Shop = () => {
   const handleCartClick = () => {
     if (!isAuthenticated) {
       toast({
-        title: "Sign In Required",
-        description: "Please sign in to view your cart.",
-        variant: "destructive",
+        title: "Sign In to View Cart",
+        description: "Create an account or sign in to access your cart.",
+        variant: "default",
       });
-      navigate('/auth');
       return;
     }
     setCartOpen(true);
@@ -168,7 +167,7 @@ const Shop = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-blue-200 text-lg">Browse our products freely • Sign in to purchase</p>
+                <p className="text-blue-200 text-lg">Browse and explore our products • Sign in to purchase</p>
                 <Button 
                   onClick={() => navigate('/auth')}
                   variant="outline"
@@ -222,7 +221,7 @@ const Shop = () => {
                         )}
                       </div>
                       
-                      {/* Quantity Selector - Always show but indicate auth requirement */}
+                      {/* Quantity Selector - Always show */}
                       <div className="flex items-center justify-center space-x-1 md:space-x-2 mb-2 md:mb-4">
                         <Button
                           variant="outline"
@@ -244,7 +243,7 @@ const Shop = () => {
                         </Button>
                       </div>
                       
-                      {/* Action Buttons - Show for everyone, handle auth in click handlers */}
+                      {/* Action Buttons - Show for everyone */}
                       <div className="space-y-1 md:space-y-2">
                         <Button
                           onClick={() => handleBuyNow(product)}

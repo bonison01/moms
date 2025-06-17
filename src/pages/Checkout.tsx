@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useCart } from '@/hooks/useCartContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, CreditCard, Truck } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, User } from 'lucide-react';
 
 interface UserProfile {
   full_name?: string;
@@ -24,17 +24,36 @@ interface UserProfile {
   phone?: string;
 }
 
+interface GuestCheckoutItem {
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    image_url: string | null;
+  };
+  quantity: number;
+}
+
 const Checkout = () => {
   const { user, isAuthenticated } = useAuth();
   const { cartItems, getTotalAmount, clearCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({});
   const [saveProfile, setSaveProfile] = useState(true);
   
+  // Guest checkout data from navigation state
+  const guestCheckoutData = location.state as { guestCheckout?: boolean; product?: any; quantity?: number } | null;
+  const isGuestCheckout = guestCheckoutData?.guestCheckout;
+  const guestItem: GuestCheckoutItem | null = guestCheckoutData?.product ? {
+    product: guestCheckoutData.product,
+    quantity: guestCheckoutData.quantity || 1
+  } : null;
+
   const [formData, setFormData] = useState({
     full_name: '',
     address_line_1: '',
@@ -46,17 +65,13 @@ const Checkout = () => {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to continue with checkout",
-        variant: "destructive",
-      });
-      navigate('/auth');
-      return;
+    // For guest checkout, we have items from navigation state
+    if (isGuestCheckout && guestItem) {
+      return; // Don't redirect, allow guest checkout
     }
 
-    if (cartItems.length === 0) {
+    // For authenticated users, check if they have cart items
+    if (isAuthenticated && cartItems.length === 0) {
       toast({
         title: "Empty Cart",
         description: "Please add items to your cart before checkout",
@@ -66,8 +81,11 @@ const Checkout = () => {
       return;
     }
 
-    fetchUserProfile();
-  }, [isAuthenticated, cartItems, navigate, toast]);
+    // If authenticated, fetch user profile
+    if (isAuthenticated && user) {
+      fetchUserProfile();
+    }
+  }, [isAuthenticated, cartItems, navigate, toast, isGuestCheckout, guestItem, user]);
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -128,24 +146,35 @@ const Checkout = () => {
   };
 
   const handlePlaceOrder = async () => {
-    if (!user || cartItems.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please ensure you are logged in and have items in your cart",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!validateForm()) {
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log('Starting checkout process for user:', user.id);
+      
+      let totalAmount: number;
+      let orderItems: any[];
 
-      const totalAmount = getTotalAmount();
+      // Calculate total and prepare order items based on checkout type
+      if (isGuestCheckout && guestItem) {
+        totalAmount = guestItem.product.price * guestItem.quantity;
+        orderItems = [{
+          product_id: guestItem.product.id,
+          quantity: guestItem.quantity,
+          price: guestItem.product.price
+        }];
+      } else if (isAuthenticated && cartItems.length > 0) {
+        totalAmount = getTotalAmount();
+        orderItems = cartItems.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.product.price
+        }));
+      } else {
+        throw new Error('No items to checkout');
+      }
+
       const deliveryAddress = {
         full_name: formData.full_name,
         address_line_1: formData.address_line_1,
@@ -155,8 +184,8 @@ const Checkout = () => {
         postal_code: formData.postal_code
       };
 
-      // Save profile if requested
-      if (saveProfile) {
+      // Save profile if user is authenticated and requested
+      if (isAuthenticated && user && saveProfile) {
         console.log('Updating user profile with address info');
         const { error: profileError } = await supabase
           .from('profiles')
@@ -174,36 +203,24 @@ const Checkout = () => {
 
         if (profileError) {
           console.error('Error updating profile:', profileError);
-          toast({
-            title: "Profile Update Failed",
-            description: "Could not save your address information",
-            variant: "destructive",
-          });
-        } else {
-          console.log('Profile updated successfully');
         }
       }
 
       // Create order
-      console.log('Creating order with data:', {
-        user_id: user.id,
+      const orderData = {
+        user_id: isAuthenticated && user ? user.id : null,
         total_amount: totalAmount,
         payment_method: paymentMethod,
         delivery_address: deliveryAddress,
         phone: formData.phone,
         status: 'pending'
-      });
+      };
+
+      console.log('Creating order with data:', orderData);
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert({
-          user_id: user.id,
-          total_amount: totalAmount,
-          payment_method: paymentMethod,
-          delivery_address: deliveryAddress,
-          phone: formData.phone,
-          status: 'pending'
-        })
+        .insert(orderData)
         .select()
         .single();
 
@@ -215,18 +232,16 @@ const Checkout = () => {
       console.log('Order created successfully:', order.id);
 
       // Create order items
-      const orderItems = cartItems.map(item => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.product.price
+      const orderItemsWithOrderId = orderItems.map(item => ({
+        ...item,
+        order_id: order.id
       }));
 
-      console.log('Creating order items:', orderItems);
+      console.log('Creating order items:', orderItemsWithOrderId);
 
       const { error: itemsError } = await supabase
         .from('order_items')
-        .insert(orderItems);
+        .insert(orderItemsWithOrderId);
 
       if (itemsError) {
         console.error('Error creating order items:', itemsError);
@@ -235,15 +250,22 @@ const Checkout = () => {
 
       console.log('Order items created successfully');
 
-      // Clear cart after successful order
-      await clearCart();
+      // Clear cart only for authenticated users
+      if (isAuthenticated && !isGuestCheckout) {
+        await clearCart();
+      }
 
       toast({
         title: "Order Placed Successfully! 🎉",
         description: `Order #${order.id.slice(0, 8)} has been placed for ₹${totalAmount}. You will receive a confirmation shortly.`,
       });
 
-      navigate('/customer-dashboard');
+      // Navigate based on user type
+      if (isAuthenticated) {
+        navigate('/customer-dashboard');
+      } else {
+        navigate('/shop');
+      }
 
     } catch (error: any) {
       console.error('Checkout error:', error);
@@ -257,9 +279,15 @@ const Checkout = () => {
     }
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Get items to display (either cart items or guest item)
+  const displayItems = isGuestCheckout && guestItem ? [guestItem] : 
+    cartItems.map(item => ({
+      product: item.product,
+      quantity: item.quantity
+    }));
+
+  const displayTotal = isGuestCheckout && guestItem ? 
+    guestItem.product.price * guestItem.quantity : getTotalAmount();
 
   return (
     <Layout>
@@ -274,6 +302,34 @@ const Checkout = () => {
             Back to Shop
           </Button>
           <h1 className="text-3xl font-bold">Checkout</h1>
+          
+          {/* Show checkout type indicator */}
+          {isGuestCheckout ? (
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <User className="h-5 w-5 text-blue-600" />
+                <span className="text-blue-800 font-medium">Guest Checkout</span>
+                <span className="text-blue-600">•</span>
+                <span className="text-blue-700">
+                  <Button 
+                    variant="link" 
+                    className="text-blue-700 p-0 h-auto" 
+                    onClick={() => navigate('/auth')}
+                  >
+                    Sign in
+                  </Button> 
+                  {" "}to save your information and track your order
+                </span>
+              </div>
+            </div>
+          ) : isAuthenticated && (
+            <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <User className="h-5 w-5 text-green-600" />
+                <span className="text-green-800 font-medium">Welcome back, {user?.email}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -285,8 +341,8 @@ const Checkout = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center">
+                  {displayItems.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
                         <img
                           src={item.product.image_url || '/placeholder.svg'}
@@ -304,7 +360,7 @@ const Checkout = () => {
                   <div className="border-t pt-4">
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>Total:</span>
-                      <span>₹{getTotalAmount()}</span>
+                      <span>₹{displayTotal}</span>
                     </div>
                   </div>
                 </div>
@@ -405,16 +461,19 @@ const Checkout = () => {
                   />
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="save-profile"
-                    checked={saveProfile}
-                    onCheckedChange={(checked) => setSaveProfile(checked as boolean)}
-                  />
-                  <Label htmlFor="save-profile" className="text-sm">
-                    Save this information for future orders
-                  </Label>
-                </div>
+                {/* Only show save profile option for authenticated users */}
+                {isAuthenticated && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="save-profile"
+                      checked={saveProfile}
+                      onCheckedChange={(checked) => setSaveProfile(checked as boolean)}
+                    />
+                    <Label htmlFor="save-profile" className="text-sm">
+                      Save this information for future orders
+                    </Label>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -457,7 +516,7 @@ const Checkout = () => {
               className="w-full bg-black text-white hover:bg-gray-800 py-3"
               size="lg"
             >
-              {isLoading ? 'Processing Order...' : `Place Order - ₹${getTotalAmount()}`}
+              {isLoading ? 'Processing Order...' : `Place Order - ₹${displayTotal}`}
             </Button>
           </div>
         </div>

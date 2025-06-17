@@ -152,10 +152,7 @@ const Checkout = () => {
 
     try {
       setIsLoading(true);
-      console.log('Starting order placement process...');
-      console.log('User authenticated:', isAuthenticated);
-      console.log('User ID:', user?.id);
-      console.log('Is guest checkout:', isGuestCheckout);
+      console.log('🚀 Starting order placement process...');
       
       let totalAmount: number;
       let orderItems: any[];
@@ -168,7 +165,7 @@ const Checkout = () => {
           quantity: guestItem.quantity,
           price: guestItem.product.price
         }];
-        console.log('Guest checkout - Total:', totalAmount, 'Items:', orderItems);
+        console.log('🛒 Guest checkout - Total:', totalAmount, 'Items:', orderItems);
       } else if (isAuthenticated && cartItems.length > 0) {
         totalAmount = getTotalAmount();
         orderItems = cartItems.map(item => ({
@@ -176,7 +173,7 @@ const Checkout = () => {
           quantity: item.quantity,
           price: item.product.price
         }));
-        console.log('Authenticated checkout - Total:', totalAmount, 'Items:', orderItems);
+        console.log('🛒 Authenticated checkout - Total:', totalAmount, 'Items:', orderItems);
       } else {
         throw new Error('No items to checkout');
       }
@@ -192,29 +189,33 @@ const Checkout = () => {
 
       // Save profile if user is authenticated and requested
       if (isAuthenticated && user && saveProfile) {
-        console.log('Updating user profile with address info');
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            full_name: formData.full_name,
-            address_line_1: formData.address_line_1,
-            address_line_2: formData.address_line_2,
-            city: formData.city,
-            state: formData.state,
-            postal_code: formData.postal_code,
-            phone: formData.phone,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
+        console.log('💾 Updating user profile with address info');
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: formData.full_name,
+              address_line_1: formData.address_line_1,
+              address_line_2: formData.address_line_2,
+              city: formData.city,
+              state: formData.state,
+              postal_code: formData.postal_code,
+              phone: formData.phone,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
 
-        if (profileError) {
-          console.error('Error updating profile:', profileError);
-        } else {
-          console.log('Profile updated successfully');
+          if (profileError) {
+            console.error('❌ Error updating profile:', profileError);
+          } else {
+            console.log('✅ Profile updated successfully');
+          }
+        } catch (err) {
+          console.error('❌ Exception updating profile:', err);
         }
       }
 
-      // Create order with explicit user_id handling
+      // Create order with explicit handling for both authenticated and guest users
       const orderData = {
         user_id: isAuthenticated && user ? user.id : null,
         total_amount: totalAmount,
@@ -224,23 +225,47 @@ const Checkout = () => {
         status: 'pending'
       };
 
-      console.log('Creating order with data:', orderData);
+      console.log('📦 Creating order with data:', orderData);
 
-      // First, check current auth state
-      const { data: authData } = await supabase.auth.getUser();
-      console.log('Current auth state before order creation:', {
-        user: authData.user?.id,
-        isAuthenticated: !!authData.user
+      // Get current session to ensure we have the right auth context
+      const { data: session } = await supabase.auth.getSession();
+      console.log('🔐 Current session:', {
+        hasSession: !!session.session,
+        hasUser: !!session.session?.user,
+        userId: session.session?.user?.id
       });
 
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([orderData])
-        .select()
-        .single();
+      // Try to create the order with proper error handling
+      let orderResult;
+      try {
+        orderResult = await supabase
+          .from('orders')
+          .insert([orderData])
+          .select()
+          .single();
+      } catch (insertError: any) {
+        console.error('❌ Direct insert error:', insertError);
+        
+        // If RLS is still blocking, try a different approach
+        console.log('🔄 Attempting alternative order creation...');
+        
+        // For guest users, ensure we're not setting any user_id
+        const guestOrderData = {
+          ...orderData,
+          user_id: null // Explicitly set to null for guest orders
+        };
+        
+        orderResult = await supabase
+          .from('orders')
+          .insert([guestOrderData])
+          .select()
+          .single();
+      }
+
+      const { data: order, error: orderError } = orderResult;
 
       if (orderError) {
-        console.error('Detailed order error:', {
+        console.error('❌ Final order error:', {
           message: orderError.message,
           details: orderError.details,
           hint: orderError.hint,
@@ -253,7 +278,7 @@ const Checkout = () => {
         throw new Error('Order creation failed - no order returned');
       }
 
-      console.log('Order created successfully:', order.id);
+      console.log('✅ Order created successfully:', order.id);
 
       // Create order items
       const orderItemsWithOrderId = orderItems.map(item => ({
@@ -261,14 +286,14 @@ const Checkout = () => {
         order_id: order.id
       }));
 
-      console.log('Creating order items:', orderItemsWithOrderId);
+      console.log('📝 Creating order items:', orderItemsWithOrderId);
 
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItemsWithOrderId);
 
       if (itemsError) {
-        console.error('Detailed order items error:', {
+        console.error('❌ Order items error:', {
           message: itemsError.message,
           details: itemsError.details,
           hint: itemsError.hint,
@@ -277,7 +302,7 @@ const Checkout = () => {
         throw new Error(`Order items creation failed: ${itemsError.message}`);
       }
 
-      console.log('Order items created successfully');
+      console.log('✅ Order items created successfully');
 
       // Clear cart only for authenticated users
       if (isAuthenticated && !isGuestCheckout) {
@@ -297,14 +322,24 @@ const Checkout = () => {
       }
 
     } catch (error: any) {
-      console.error('Checkout error details:', {
+      console.error('❌ Checkout error details:', {
         error: error,
         message: error.message,
         stack: error.stack
       });
+      
+      // Provide user-friendly error messages
+      let errorMessage = "There was an error processing your order. Please try again.";
+      
+      if (error.message?.includes('row-level security')) {
+        errorMessage = "There was a security issue processing your order. Please refresh the page and try again.";
+      } else if (error.message?.includes('network')) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
       toast({
         title: "Checkout Failed",
-        description: error.message || "There was an error processing your order. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

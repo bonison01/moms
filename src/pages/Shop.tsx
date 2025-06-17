@@ -28,7 +28,7 @@ const Shop = () => {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const { toast } = useToast();
   const { isAuthenticated, user } = useAuth();
-  const { addToCart, cartCount } = useCart();
+  const { addToCart, cartCount, refreshCart } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,12 +72,35 @@ const Shop = () => {
   };
 
   const handleBuyNow = async (product: Product) => {
-    // For authenticated users, add to cart and navigate to checkout
+    console.log('🛒 Buy Now clicked for product:', product.name);
+    
     if (isAuthenticated) {
-      await addToCart(product.id, quantities[product.id] || 1);
-      navigate('/checkout');
+      // For authenticated users: add to cart, refresh cart, then navigate
+      try {
+        console.log('🔄 Adding item to cart for authenticated user...');
+        await addToCart(product.id, quantities[product.id] || 1);
+        
+        // Refresh cart to ensure latest data
+        console.log('🔄 Refreshing cart data...');
+        await refreshCart();
+        
+        // Small delay to ensure cart is updated
+        setTimeout(() => {
+          console.log('➡️ Navigating to checkout with updated cart...');
+          navigate('/checkout');
+        }, 100);
+        
+      } catch (error) {
+        console.error('❌ Error in Buy Now for authenticated user:', error);
+        toast({
+          title: "Error",
+          description: "Failed to process purchase. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
-      // For guests, navigate directly to checkout
+      // For guests: navigate directly with product data
+      console.log('➡️ Guest checkout - navigating with product data...');
       navigate('/checkout', { 
         state: { 
           guestCheckout: true,

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuthContext';
@@ -36,7 +37,7 @@ interface GuestCheckoutItem {
 
 const Checkout = () => {
   const { user, isAuthenticated } = useAuth();
-  const { cartItems, getTotalAmount, clearCart } = useCart();
+  const { cartItems, getTotalAmount, clearCart, refreshCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,6 +48,7 @@ const Checkout = () => {
   const [saveProfile, setSaveProfile] = useState(true);
   const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
   const [confirmedOrderData, setConfirmedOrderData] = useState<any>(null);
+  const [cartLoading, setCartLoading] = useState(false);
   
   // Guest checkout data from navigation state
   const guestCheckoutData = location.state as { guestCheckout?: boolean; product?: any; quantity?: number } | null;
@@ -68,27 +70,72 @@ const Checkout = () => {
   });
 
   useEffect(() => {
-    // For guest checkout, we have items from navigation state
-    if (isGuestCheckout && guestItem) {
-      return; // Don't redirect, allow guest checkout
-    }
+    const initializeCheckout = async () => {
+      console.log('🔍 Initializing checkout...');
+      console.log('isGuestCheckout:', isGuestCheckout);
+      console.log('guestItem:', guestItem);
+      console.log('isAuthenticated:', isAuthenticated);
+      console.log('cartItems.length:', cartItems.length);
+      
+      // For guest checkout, we have items from navigation state
+      if (isGuestCheckout && guestItem) {
+        console.log('✅ Guest checkout with item, proceeding...');
+        return; // Don't redirect, allow guest checkout
+      }
 
-    // For authenticated users, check if they have cart items
-    if (isAuthenticated && cartItems.length === 0) {
+      // For authenticated users, check and refresh cart
+      if (isAuthenticated) {
+        console.log('🔄 Authenticated user - refreshing cart...');
+        setCartLoading(true);
+        
+        try {
+          await refreshCart();
+          console.log('✅ Cart refreshed successfully');
+        } catch (error) {
+          console.error('❌ Error refreshing cart:', error);
+        } finally {
+          setCartLoading(false);
+        }
+        
+        // After refreshing, check if cart is empty
+        // Note: We need to check cartItems in a separate effect since refreshCart is async
+        return;
+      }
+
+      // If not authenticated and not guest checkout, redirect to shop
+      if (!isAuthenticated && !isGuestCheckout) {
+        console.log('❌ Not authenticated and not guest checkout - redirecting to shop');
+        toast({
+          title: "Sign In Required",
+          description: "Please sign in or use guest checkout",
+          variant: "destructive",
+        });
+        navigate('/shop');
+      }
+    };
+
+    initializeCheckout();
+  }, [isGuestCheckout, guestItem, isAuthenticated, navigate, toast, refreshCart]);
+
+  // Separate effect to check cart after it's been refreshed
+  useEffect(() => {
+    if (isAuthenticated && !cartLoading && cartItems.length === 0 && !isGuestCheckout) {
+      console.log('❌ Authenticated user with empty cart - redirecting to shop');
       toast({
         title: "Empty Cart",
         description: "Please add items to your cart before checkout",
         variant: "destructive",
       });
       navigate('/shop');
-      return;
     }
+  }, [isAuthenticated, cartLoading, cartItems.length, isGuestCheckout, navigate, toast]);
 
+  useEffect(() => {
     // If authenticated, fetch user profile
     if (isAuthenticated && user) {
       fetchUserProfile();
     }
-  }, [isAuthenticated, cartItems, navigate, toast, isGuestCheckout, guestItem, user]);
+  }, [isAuthenticated, user]);
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -371,6 +418,20 @@ const Checkout = () => {
       navigate('/shop');
     }
   };
+
+  // Show loading while cart is being refreshed for authenticated users
+  if (isAuthenticated && cartLoading) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+            <span className="ml-2 text-gray-600">Loading checkout...</span>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   // Get items to display (either cart items or guest item)
   const displayItems = isGuestCheckout && guestItem ? [guestItem] : 

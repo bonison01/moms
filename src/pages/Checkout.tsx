@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuthContext';
@@ -152,6 +153,9 @@ const Checkout = () => {
     try {
       setIsLoading(true);
       console.log('Starting order placement process...');
+      console.log('User authenticated:', isAuthenticated);
+      console.log('User ID:', user?.id);
+      console.log('Is guest checkout:', isGuestCheckout);
       
       let totalAmount: number;
       let orderItems: any[];
@@ -164,6 +168,7 @@ const Checkout = () => {
           quantity: guestItem.quantity,
           price: guestItem.product.price
         }];
+        console.log('Guest checkout - Total:', totalAmount, 'Items:', orderItems);
       } else if (isAuthenticated && cartItems.length > 0) {
         totalAmount = getTotalAmount();
         orderItems = cartItems.map(item => ({
@@ -171,6 +176,7 @@ const Checkout = () => {
           quantity: item.quantity,
           price: item.product.price
         }));
+        console.log('Authenticated checkout - Total:', totalAmount, 'Items:', orderItems);
       } else {
         throw new Error('No items to checkout');
       }
@@ -203,10 +209,12 @@ const Checkout = () => {
 
         if (profileError) {
           console.error('Error updating profile:', profileError);
+        } else {
+          console.log('Profile updated successfully');
         }
       }
 
-      // Create order - simplified approach
+      // Create order with explicit user_id handling
       const orderData = {
         user_id: isAuthenticated && user ? user.id : null,
         total_amount: totalAmount,
@@ -218,6 +226,13 @@ const Checkout = () => {
 
       console.log('Creating order with data:', orderData);
 
+      // First, check current auth state
+      const { data: authData } = await supabase.auth.getUser();
+      console.log('Current auth state before order creation:', {
+        user: authData.user?.id,
+        isAuthenticated: !!authData.user
+      });
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert([orderData])
@@ -225,7 +240,12 @@ const Checkout = () => {
         .single();
 
       if (orderError) {
-        console.error('Error creating order:', orderError);
+        console.error('Detailed order error:', {
+          message: orderError.message,
+          details: orderError.details,
+          hint: orderError.hint,
+          code: orderError.code
+        });
         throw new Error(`Order creation failed: ${orderError.message}`);
       }
 
@@ -248,7 +268,12 @@ const Checkout = () => {
         .insert(orderItemsWithOrderId);
 
       if (itemsError) {
-        console.error('Error creating order items:', itemsError);
+        console.error('Detailed order items error:', {
+          message: itemsError.message,
+          details: itemsError.details,
+          hint: itemsError.hint,
+          code: itemsError.code
+        });
         throw new Error(`Order items creation failed: ${itemsError.message}`);
       }
 
@@ -272,7 +297,11 @@ const Checkout = () => {
       }
 
     } catch (error: any) {
-      console.error('Checkout error:', error);
+      console.error('Checkout error details:', {
+        error: error,
+        message: error.message,
+        stack: error.stack
+      });
       toast({
         title: "Checkout Failed",
         description: error.message || "There was an error processing your order. Please try again.",

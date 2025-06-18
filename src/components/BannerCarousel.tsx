@@ -15,17 +15,25 @@ interface Banner {
 const banners: Banner[] = [
   {
     id: 1,
-    title: "Special Offer",
-    subtitle: "Get 20% off on all traditional pickles",
+    title: "Authentic Flavors",
+    subtitle: "Traditional Recipes passed down through generations",
     image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1200&h=400&fit=crop",
+    buttonText: "Discover Our Heritage",
+    buttonLink: "/about"
+  },
+  {
+    id: 2,
+    title: "Special Offer",
+    subtitle: "Get 20% off on all traditional pickles this week",
+    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=1200&h=400&fit=crop",
     buttonText: "Shop Now",
     buttonLink: "/shop"
   },
   {
-    id: 2,
+    id: 3,
     title: "New Arrivals",
     subtitle: "Discover our latest authentic Manipuri delicacies",
-    image: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=1200&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1500673922987-e212871fec22?w=1200&h=400&fit=crop",
     buttonText: "Explore",
     buttonLink: "/shop"
   }

@@ -44,16 +44,16 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
             </Button>
           </div>
 
-          {/* User Status */}
+          {/* User Status - Updated for guest checkout */}
           {!isAuthenticated && (
             <div className="px-4 py-2 bg-blue-50 border-b">
               <p className="text-sm text-blue-800">
-                Shopping as guest • <button 
+                Shopping as guest • You can checkout without signing in or <button 
                   onClick={() => navigate('/auth')} 
                   className="underline font-medium"
                 >
                   Sign in
-                </button> to save your cart
+                </button> for a better experience
               </p>
             </div>
           )}
@@ -112,7 +112,7 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
             )}
           </div>
 
-          {/* Footer with Total and Checkout */}
+          {/* Footer with Total and Checkout - Updated to allow guest checkout */}
           {cartItems.length > 0 && (
             <div className="border-t px-4 py-4">
               <div className="flex justify-between items-center mb-4">
@@ -126,6 +126,7 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
                   className="w-full bg-black text-white hover:bg-gray-800"
                 >
                   Proceed to Checkout
+                  {!isAuthenticated && <span className="text-xs ml-1">(as guest)</span>}
                 </Button>
                 
                 <Button

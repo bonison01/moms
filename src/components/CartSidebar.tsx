@@ -12,7 +12,7 @@ interface CartSidebarProps {
 
 const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const { cartItems, updateCartItemQuantity, removeFromCart, clearCart, getTotalAmount } = useCart();
-  const { user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleQuantityChange = (cartItemId: string, newQuantity: number) => {
@@ -22,7 +22,7 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   };
 
   const handleCheckout = () => {
-    if (!user || cartItems.length === 0) return;
+    if (cartItems.length === 0) return;
     
     onClose();
     navigate('/checkout');
@@ -43,6 +43,20 @@ const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
               <X className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* User Status */}
+          {!isAuthenticated && (
+            <div className="px-4 py-2 bg-blue-50 border-b">
+              <p className="text-sm text-blue-800">
+                Shopping as guest • <button 
+                  onClick={() => navigate('/auth')} 
+                  className="underline font-medium"
+                >
+                  Sign in
+                </button> to save your cart
+              </p>
+            </div>
+          )}
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto px-4 py-4">

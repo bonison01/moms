@@ -7,6 +7,7 @@ import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import TestimonialCard from '../components/TestimonialCard';
 import FeaturedProducts from '../components/FeaturedProducts';
+import BannerCarousel from '../components/BannerCarousel';
 import { ArrowRight } from 'lucide-react';
 
 interface FeaturedProduct {
@@ -120,9 +121,15 @@ const Index = () => {
 
   return (
     <Layout>
-      {/* Hero Section */}
+      {/* Hero Section with Background Image */}
       <section className="relative bg-gradient-to-r from-black to-gray-800 text-white">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(https://images.unsplash.com/photo-1500673922987-e212871fec22?w=1920&h=1080&fit=crop)',
+          }}
+        />
+        <div className="absolute inset-0 bg-black opacity-60"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -133,6 +140,10 @@ const Index = () => {
               Discover the taste of tradition with our handcrafted pickles and specialty foods, 
               made with love and authentic recipes passed down through generations.
             </p>
+            
+            {/* Banner Carousel */}
+            <BannerCarousel />
+            
             <div className="space-x-4">
               <Link
                 to="/shop"

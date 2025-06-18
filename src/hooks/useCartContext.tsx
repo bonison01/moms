@@ -16,6 +16,17 @@ interface CartItem {
   };
 }
 
+interface GuestCartItem {
+  product_id: string;
+  quantity: number;
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    image_url: string | null;
+  };
+}
+
 interface CartContextType {
   cartItems: CartItem[];
   cartCount: number;
@@ -38,14 +49,58 @@ export const useCart = (): CartContextType => {
   return context;
 };
 
+const GUEST_CART_KEY = 'guest_cart';
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
+  // Load guest cart from localStorage
+  const loadGuestCart = async () => {
+    try {
+      const guestCartData = localStorage.getItem(GUEST_CART_KEY);
+      if (!guestCartData) return [];
+
+      const guestItems: GuestCartItem[] = JSON.parse(guestCartData);
+      
+      // Convert guest cart items to regular cart items format
+      const cartItemsWithIds: CartItem[] = guestItems.map((item, index) => ({
+        id: `guest_${index}`,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        product: item.product
+      }));
+
+      return cartItemsWithIds;
+    } catch (error) {
+      console.error('Error loading guest cart:', error);
+      return [];
+    }
+  };
+
+  // Save guest cart to localStorage
+  const saveGuestCart = (items: CartItem[]) => {
+    try {
+      const guestItems: GuestCartItem[] = items.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        product: item.product
+      }));
+      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(guestItems));
+    } catch (error) {
+      console.error('Error saving guest cart:', error);
+    }
+  };
+
   const fetchCart = async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user) {
+      // Load guest cart from localStorage
+      const guestCart = await loadGuestCart();
+      setCartItems(guestCart);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -82,11 +137,53 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = async (productId: string, quantity: number = 1) => {
     if (!isAuthenticated || !user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to add items to cart",
-        variant: "destructive",
-      });
+      // Handle guest cart
+      try {
+        // Fetch product details
+        const { data: product, error } = await supabase
+          .from('products')
+          .select('id, name, price, image_url')
+          .eq('id', productId)
+          .single();
+
+        if (error || !product) {
+          throw new Error('Product not found');
+        }
+
+        const currentCart = await loadGuestCart();
+        const existingItemIndex = currentCart.findIndex(item => item.product_id === productId);
+
+        let updatedCart: CartItem[];
+        if (existingItemIndex >= 0) {
+          // Update existing item
+          updatedCart = [...currentCart];
+          updatedCart[existingItemIndex].quantity += quantity;
+        } else {
+          // Add new item
+          const newItem: CartItem = {
+            id: `guest_${currentCart.length}`,
+            product_id: productId,
+            quantity: quantity,
+            product: product
+          };
+          updatedCart = [...currentCart, newItem];
+        }
+
+        setCartItems(updatedCart);
+        saveGuestCart(updatedCart);
+
+        toast({
+          title: "Added to Cart",
+          description: "Item has been added to your cart",
+        });
+      } catch (error: any) {
+        console.error('Exception adding to guest cart:', error);
+        toast({
+          title: "Error",
+          description: "Failed to add item to cart",
+          variant: "destructive",
+        });
+      }
       return;
     }
 
@@ -150,7 +247,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateCartItemQuantity = async (cartItemId: string, quantity: number) => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user) {
+      // Handle guest cart
+      const currentCart = [...cartItems];
+      const itemIndex = currentCart.findIndex(item => item.id === cartItemId);
+      
+      if (itemIndex >= 0) {
+        currentCart[itemIndex].quantity = quantity;
+        setCartItems(currentCart);
+        saveGuestCart(currentCart);
+        
+        toast({
+          title: "Cart Updated",
+          description: "Item quantity has been updated",
+        });
+      }
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -177,7 +290,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeFromCart = async (cartItemId: string) => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user) {
+      // Handle guest cart
+      const currentCart = cartItems.filter(item => item.id !== cartItemId);
+      setCartItems(currentCart);
+      saveGuestCart(currentCart);
+      
+      toast({
+        title: "Item Removed",
+        description: "Item has been removed from your cart",
+      });
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -204,7 +328,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clearCart = async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user) {
+      // Handle guest cart
+      setCartItems([]);
+      localStorage.removeItem(GUEST_CART_KEY);
+      
+      toast({
+        title: "Cart Cleared",
+        description: "All items have been removed from your cart",
+      });
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -239,13 +373,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     await fetchCart();
   };
 
-  // Fetch cart when user changes
+  // Fetch cart when user changes or on mount
   useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchCart();
-    } else {
-      setCartItems([]);
-    }
+    fetchCart();
   }, [isAuthenticated, user]);
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);

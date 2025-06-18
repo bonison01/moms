@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuthContext';
@@ -112,15 +111,6 @@ const Shop = () => {
   };
 
   const handleAddToCart = async (product: Product) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Sign In to Add to Cart",
-        description: "Create an account or sign in to save items to your cart.",
-        variant: "default",
-      });
-      return;
-    }
-
     await addToCart(product.id, quantities[product.id] || 1);
   };
 
@@ -132,14 +122,6 @@ const Shop = () => {
   };
 
   const handleCartClick = () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Sign In to View Cart",
-        description: "Create an account or sign in to access your cart.",
-        variant: "default",
-      });
-      return;
-    }
     setCartOpen(true);
   };
 
@@ -148,20 +130,18 @@ const Shop = () => {
       {/* Cart Sidebar */}
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
 
-      {/* Cart Button - Fixed Position - Only show for authenticated users */}
-      {isAuthenticated && (
-        <Button
-          onClick={handleCartClick}
-          className="fixed bottom-6 right-6 z-40 rounded-full h-14 w-14 bg-black text-white hover:bg-gray-800 shadow-lg"
-        >
-          <ShoppingCart className="h-6 w-6" />
-          {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
-              {cartCount}
-            </span>
-          )}
-        </Button>
-      )}
+      {/* Cart Button - Fixed Position - Show for all users */}
+      <Button
+        onClick={handleCartClick}
+        className="fixed bottom-6 right-6 z-40 rounded-full h-14 w-14 bg-black text-white hover:bg-gray-800 shadow-lg"
+      >
+        <ShoppingCart className="h-6 w-6" />
+        {cartCount > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+            {cartCount}
+          </span>
+        )}
+      </Button>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-black to-gray-800 text-white py-16">
@@ -190,14 +170,24 @@ const Shop = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-blue-200 text-lg">Browse and explore our products • Sign in to purchase</p>
-                <Button 
-                  onClick={() => navigate('/auth')}
-                  variant="outline"
-                  className="text-white border-white hover:bg-white hover:text-black"
-                >
-                  Sign In / Register
-                </Button>
+                <p className="text-blue-200 text-lg">Browse, shop, and checkout as a guest • Sign in for a better experience</p>
+                <div className="flex justify-center space-x-4">
+                  <Button 
+                    onClick={() => navigate('/auth')}
+                    variant="outline"
+                    className="text-white border-white hover:bg-white hover:text-black"
+                  >
+                    Sign In / Register
+                  </Button>
+                  <Button 
+                    onClick={handleCartClick}
+                    variant="outline"
+                    className="text-white border-white hover:bg-white hover:text-black"
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Cart ({cartCount})
+                  </Button>
+                </div>
               </div>
             )}
           </div>

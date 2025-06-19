@@ -78,18 +78,17 @@ const Checkout = () => {
       console.log('isAuthenticated:', isAuthenticated);
       console.log('cartItems.length:', cartItems.length);
       
-      // For guest checkout, we have items from navigation state
+      // For guest checkout with specific item, proceed
       if (isGuestCheckout && guestItem) {
         console.log('✅ Guest checkout with item, proceeding...');
         setCheckoutInitialized(true);
         return;
       }
 
-      // For authenticated users, check cart without refreshing
+      // For authenticated users, check cart
       if (isAuthenticated) {
         console.log('🔄 Authenticated user - checking existing cart...');
         
-        // Check if cart is empty after allowing time for cart context to load
         if (cartItems.length === 0) {
           console.log('❌ Authenticated user with empty cart - redirecting to shop');
           toast({
@@ -106,15 +105,23 @@ const Checkout = () => {
         return;
       }
 
-      // If not authenticated and not guest checkout, redirect to shop
-      if (!isAuthenticated && !isGuestCheckout) {
-        console.log('❌ Not authenticated and not guest checkout - redirecting to shop');
+      // For guest users with cart items, allow checkout
+      if (!isAuthenticated && cartItems.length > 0) {
+        console.log('✅ Guest user with cart items, proceeding with guest checkout');
+        setCheckoutInitialized(true);
+        return;
+      }
+
+      // If no items in cart and not guest checkout, redirect to shop
+      if (!isAuthenticated && cartItems.length === 0 && !isGuestCheckout) {
+        console.log('❌ Guest user with empty cart - redirecting to shop');
         toast({
-          title: "Sign In Required",
-          description: "Please sign in or use guest checkout",
+          title: "Empty Cart",
+          description: "Please add items to your cart before checkout",
           variant: "destructive",
         });
         navigate('/shop');
+        return;
       }
       
       setCheckoutInitialized(true);
@@ -248,14 +255,14 @@ const Checkout = () => {
           price: guestItem.product.price
         }];
         console.log('🛒 Guest checkout - Total:', totalAmount, 'Items:', orderItems);
-      } else if (isAuthenticated && cartItems.length > 0) {
+      } else if (cartItems.length > 0) {
         totalAmount = getTotalAmount();
         orderItems = cartItems.map(item => ({
           product_id: item.product_id,
           quantity: item.quantity,
           price: item.product.price
         }));
-        console.log('🛒 Authenticated checkout - Total:', totalAmount, 'Items:', orderItems);
+        console.log('🛒 Cart checkout - Total:', totalAmount, 'Items:', orderItems);
       } else {
         throw new Error('No items to checkout');
       }
@@ -367,8 +374,8 @@ const Checkout = () => {
       // Send confirmation email
       await sendOrderConfirmationEmail(completeOrder || order, formData.email);
 
-      // Clear cart only for authenticated users
-      if (isAuthenticated && !isGuestCheckout) {
+      // Clear cart for both authenticated and guest users
+      if (!isGuestCheckout) {
         await clearCart();
       }
 
@@ -451,7 +458,7 @@ const Checkout = () => {
           <h1 className="text-3xl font-bold">Checkout</h1>
           
           {/* Show checkout type indicator */}
-          {isGuestCheckout ? (
+          {!isAuthenticated ? (
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <User className="h-5 w-5 text-blue-600" />
@@ -469,7 +476,7 @@ const Checkout = () => {
                 </span>
               </div>
             </div>
-          ) : isAuthenticated && (
+          ) : (
             <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <User className="h-5 w-5 text-green-600" />

@@ -7,7 +7,6 @@ import Layout from '../components/Layout';
 import ProductCard from '../components/ProductCard';
 import TestimonialCard from '../components/TestimonialCard';
 import FeaturedProducts from '../components/FeaturedProducts';
-import BannerCarousel from '../components/BannerCarousel';
 import { ArrowRight } from 'lucide-react';
 
 interface FeaturedProduct {
@@ -140,9 +139,6 @@ const Index = () => {
               Discover the taste of tradition with our handcrafted pickles and specialty foods, 
               made with love and authentic recipes passed down through generations.
             </p>
-            
-            {/* Banner Carousel */}
-            <BannerCarousel />
             
             <div className="space-x-4">
               <Link

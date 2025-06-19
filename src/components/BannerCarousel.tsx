@@ -29,23 +29,49 @@ const banners: Banner[] = [
     image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=1920&h=600&fit=crop",
     buttonText: "Explore Products",
     buttonLink: "/shop"
+  },
+  {
+    id: 3,
+    title: "Fresh & Natural",
+    subtitle: "Farm to Table Goodness",
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=600&fit=crop",
+    buttonText: "Discover More",
+    buttonLink: "/shop"
   }
 ];
 
 const BannerCarousel = () => {
+  const [api, setApi] = useState<any>();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    if (!api) return;
+
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % banners.length);
-    }, 5000);
+      api.scrollNext();
+    }, 5000); // Auto-progress every 5 seconds
 
     return () => clearInterval(timer);
-  }, []);
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+
+    api.on('select', () => {
+      setCurrentIndex(api.selectedScrollSnap());
+    });
+  }, [api]);
 
   return (
     <div className="w-full">
-      <Carousel className="w-full">
+      <Carousel 
+        className="w-full"
+        setApi={setApi}
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+      >
         <CarouselContent>
           {banners.map((banner) => (
             <CarouselItem key={banner.id}>
@@ -94,6 +120,19 @@ const BannerCarousel = () => {
         </CarouselContent>
         <CarouselPrevious className="left-8 bg-white/20 border-white/30 text-white hover:bg-white/30" />
         <CarouselNext className="right-8 bg-white/20 border-white/30 text-white hover:bg-white/30" />
+        
+        {/* Slide indicators */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {banners.map((_, index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 rounded-full transition-colors ${
+                index === currentIndex ? 'bg-white' : 'bg-white/50'
+              }`}
+              onClick={() => api?.scrollTo(index)}
+            />
+          ))}
+        </div>
       </Carousel>
     </div>
   );

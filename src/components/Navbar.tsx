@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User } from 'lucide-react';
@@ -21,10 +22,6 @@ const Navbar = () => {
   };
 
   const handleCartClick = () => {
-    if (!isAuthenticated) {
-      navigate('/auth');
-      return;
-    }
     setCartOpen(true);
   };
 
@@ -71,13 +68,13 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Cart Icon */}
+              {/* Cart Icon - Show for both authenticated and guest users */}
               <button
                 onClick={handleCartClick}
                 className="relative p-2 text-white hover:text-gray-300 transition-colors"
               >
                 <ShoppingCart className="h-6 w-6" />
-                {isAuthenticated && cartCount > 0 && (
+                {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {cartCount}
                   </span>

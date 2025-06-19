@@ -1,4 +1,3 @@
-
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -128,15 +127,6 @@ const Product = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Sign In to Add to Cart",
-        description: "Create an account or sign in to save items to your cart.",
-        variant: "default",
-      });
-      return;
-    }
-
     if (!product) return;
 
     try {

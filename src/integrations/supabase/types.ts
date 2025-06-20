@@ -55,9 +55,11 @@ export type Database = {
           button_link: string
           button_text: string
           created_at: string
+          display_order: number | null
           id: string
           image_url: string
           is_active: boolean
+          is_published: boolean | null
           secondary_button_link: string
           secondary_button_text: string
           subtitle: string
@@ -68,9 +70,11 @@ export type Database = {
           button_link?: string
           button_text?: string
           created_at?: string
+          display_order?: number | null
           id?: string
           image_url?: string
           is_active?: boolean
+          is_published?: boolean | null
           secondary_button_link?: string
           secondary_button_text?: string
           subtitle?: string
@@ -81,9 +85,11 @@ export type Database = {
           button_link?: string
           button_text?: string
           created_at?: string
+          display_order?: number | null
           id?: string
           image_url?: string
           is_active?: boolean
+          is_published?: boolean | null
           secondary_button_link?: string
           secondary_button_text?: string
           subtitle?: string
@@ -225,51 +231,57 @@ export type Database = {
       }
       products: {
         Row: {
-          category: string | null
+          category: Database["public"]["Enums"]["product_category"] | null
           created_at: string
           description: string | null
           featured: boolean | null
           features: string[] | null
           id: string
           image_url: string | null
+          image_urls: string[] | null
           ingredients: string | null
           is_active: boolean | null
           name: string
           nutrition_facts: Json | null
+          offer_price: number | null
           offers: string | null
           price: number
           stock_quantity: number | null
           updated_at: string
         }
         Insert: {
-          category?: string | null
+          category?: Database["public"]["Enums"]["product_category"] | null
           created_at?: string
           description?: string | null
           featured?: boolean | null
           features?: string[] | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           ingredients?: string | null
           is_active?: boolean | null
           name: string
           nutrition_facts?: Json | null
+          offer_price?: number | null
           offers?: string | null
           price: number
           stock_quantity?: number | null
           updated_at?: string
         }
         Update: {
-          category?: string | null
+          category?: Database["public"]["Enums"]["product_category"] | null
           created_at?: string
           description?: string | null
           featured?: boolean | null
           features?: string[] | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           ingredients?: string | null
           is_active?: boolean | null
           name?: string
           nutrition_facts?: Json | null
+          offer_price?: number | null
           offers?: string | null
           price?: number
           stock_quantity?: number | null
@@ -414,6 +426,7 @@ export type Database = {
       }
     }
     Enums: {
+      product_category: "chicken" | "red_meat" | "chilli_condiments" | "other"
       user_role: "admin" | "paying_user" | "free_user"
     }
     CompositeTypes: {
@@ -530,6 +543,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      product_category: ["chicken", "red_meat", "chilli_condiments", "other"],
       user_role: ["admin", "paying_user", "free_user"],
     },
   },

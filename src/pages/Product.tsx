@@ -24,6 +24,7 @@ const Product = () => {
   const [allImages, setAllImages] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -77,6 +78,11 @@ const Product = () => {
       title: "Added to cart",
       description: `${quantity} ${product.name} added to your cart`,
     });
+  };
+
+  const handleReviewSubmitted = () => {
+    setRefreshTrigger(prev => prev + 1);
+    fetchProduct();
   };
 
   if (loading) {
@@ -262,11 +268,11 @@ const Product = () => {
           {user && (
             <div>
               <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
-              <ReviewForm productId={product.id} onReviewSubmitted={fetchProduct} />
+              <ReviewForm productId={product.id} onReviewSubmitted={handleReviewSubmitted} />
             </div>
           )}
           
-          <ReviewsList productId={product.id} />
+          <ReviewsList productId={product.id} refreshTrigger={refreshTrigger} />
         </div>
       </div>
     </Layout>

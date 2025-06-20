@@ -4,15 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ProductCard from './ProductCard';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image_url: string | null;
-  description: string | null;
-  features: string[] | null;
-}
+import { Product } from '@/types/product';
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -26,7 +18,7 @@ const FeaturedProducts = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, description, features')
+        .select('*')
         .eq('featured', true)
         .eq('is_active', true)
         .limit(6);
@@ -75,13 +67,7 @@ const FeaturedProducts = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {products.map((product) => (
           <div key={product.id} className="group">
-            <ProductCard
-              {...product}
-              className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-              imageClassName="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              showFullDescription={false}
-              compact={true}
-            />
+            <ProductCard product={product} />
           </div>
         ))}
       </div>

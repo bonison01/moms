@@ -17,10 +17,10 @@ interface Review {
 
 interface ReviewsListProps {
   productId?: string; // undefined means brand reviews
-  refreshTrigger: number;
+  refreshTrigger?: number;
 }
 
-const ReviewsList = ({ productId, refreshTrigger }: ReviewsListProps) => {
+const ReviewsList = ({ productId, refreshTrigger = 0 }: ReviewsListProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [averageRating, setAverageRating] = useState(0);

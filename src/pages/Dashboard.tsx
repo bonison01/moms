@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Plus, Package, Upload } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -24,7 +26,7 @@ const Dashboard = () => {
     name: '',
     price: '',
     description: '',
-    category: '',
+    category: '' as 'chicken' | 'red_meat' | 'chilli_condiments' | 'other' | '',
     stock_quantity: '10',
     is_active: true,
     image_url: ''
@@ -83,7 +85,7 @@ const Dashboard = () => {
         name: productForm.name.trim(),
         price: parseFloat(productForm.price),
         description: productForm.description.trim() || null,
-        category: productForm.category.trim() || null,
+        category: productForm.category || null,
         stock_quantity: parseInt(productForm.stock_quantity) || 10,
         is_active: productForm.is_active,
         image_url: productForm.image_url || null
@@ -250,12 +252,17 @@ const Dashboard = () => {
 
                   <div>
                     <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                      placeholder="e.g., Snacks, Beverages"
-                    />
+                    <Select value={productForm.category} onValueChange={(value: 'chicken' | 'red_meat' | 'chilli_condiments' | 'other') => setProductForm({ ...productForm, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="chicken">Chicken</SelectItem>
+                        <SelectItem value="red_meat">Red Meat</SelectItem>
+                        <SelectItem value="chilli_condiments">Chilli Condiments</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>

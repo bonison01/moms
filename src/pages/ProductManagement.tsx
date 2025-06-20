@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash, Save, X, Package, LogOut, Home } from 'lucide-react';
 import OrderManagement from '@/components/OrderManagement';
+import BannerManagement from '@/components/BannerManagement';
 import ImageUpload from '@/components/ImageUpload';
 import { Switch } from '@/components/ui/switch';
 
@@ -257,7 +257,7 @@ const ProductManagement = () => {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-1">Manage your products and orders</p>
+              <p className="text-gray-600 mt-1">Manage your products, orders, and website content</p>
             </div>
             <div className="flex items-center space-x-4">
               <Button
@@ -288,10 +288,15 @@ const ProductManagement = () => {
             <TabsList>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="banner">Banner</TabsTrigger>
             </TabsList>
 
             <TabsContent value="orders">
               <OrderManagement />
+            </TabsContent>
+
+            <TabsContent value="banner">
+              <BannerManagement />
             </TabsContent>
 
             <TabsContent value="products">

@@ -50,6 +50,48 @@ export type Database = {
           },
         ]
       }
+      banner_settings: {
+        Row: {
+          button_link: string
+          button_text: string
+          created_at: string
+          id: string
+          image_url: string
+          is_active: boolean
+          secondary_button_link: string
+          secondary_button_text: string
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          button_link?: string
+          button_text?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          secondary_button_link?: string
+          secondary_button_text?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          button_link?: string
+          button_text?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          secondary_button_link?: string
+          secondary_button_text?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string | null

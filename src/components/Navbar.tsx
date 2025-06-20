@@ -1,15 +1,16 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ShoppingCart, User } from 'lucide-react';
+import { Menu, X, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useCart } from '@/hooks/useCartContext';
 import CartSidebar from './CartSidebar';
+import ProfileDropdown from './ProfileDropdown';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { cartCount } = useCart();
   const navigate = useNavigate();
 
@@ -59,7 +60,7 @@ const Navbar = () => {
                   <Link
                     key={link.name}
                     to={link.path}
-                    className="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition-colors"
+                    className="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition-colors duration-300 hover:bg-gray-800 rounded-md"
                   >
                     {link.name}
                   </Link>
@@ -68,41 +69,27 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Cart Icon - Show for both authenticated and guest users */}
+              {/* Cart Icon */}
               <button
                 onClick={handleCartClick}
-                className="relative p-2 text-white hover:text-gray-300 transition-colors"
+                className="relative p-2 text-white hover:text-gray-300 hover:bg-gray-800 transition-all duration-300 rounded-full transform hover:scale-110"
               >
                 <ShoppingCart className="h-6 w-6" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                     {cartCount}
                   </span>
                 )}
               </button>
 
-              {/* User Icon */}
-              {isAuthenticated ? (
-                <Link
-                  to="/customer-dashboard"
-                  className="p-2 text-white hover:text-gray-300 transition-colors"
-                >
-                  <User className="h-6 w-6" />
-                </Link>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="bg-white text-black px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Sign In
-                </Link>
-              )}
+              {/* Profile Dropdown */}
+              <ProfileDropdown />
 
               {/* Mobile menu button */}
               <div className="md:hidden">
                 <button
                   onClick={toggleMenu}
-                  className="text-white hover:text-gray-300 p-2"
+                  className="text-white hover:text-gray-300 p-2 hover:bg-gray-800 transition-colors rounded-md"
                 >
                   {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
@@ -119,7 +106,7 @@ const Navbar = () => {
                 <Link
                   key={link.name}
                   to={link.path}
-                  className="text-white hover:text-gray-300 block px-3 py-2 text-base font-medium"
+                  className="text-white hover:text-gray-300 block px-3 py-2 text-base font-medium hover:bg-gray-800 transition-colors rounded-md"
                   onClick={closeMenu}
                 >
                   {link.name}

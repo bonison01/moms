@@ -13,6 +13,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
+  offer_price: number | null;
   image_url: string | null;
   description: string | null;
   category: string | null;
@@ -20,8 +21,13 @@ interface Product {
   stock_quantity: number | null;
 }
 
+interface GroupedProducts {
+  [category: string]: Product[];
+}
+
 const Shop = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [groupedProducts, setGroupedProducts] = useState<GroupedProducts>({});
   const [loading, setLoading] = useState(true);
   const [cartOpen, setCartOpen] = useState(false);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
@@ -39,8 +45,9 @@ const Shop = () => {
       console.log('Fetching products for shop page...');
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, image_url, description, category, is_active, stock_quantity')
+        .select('id, name, price, offer_price, image_url, description, category, is_active, stock_quantity')
         .eq('is_active', true)
+        .order('category', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -50,6 +57,19 @@ const Shop = () => {
       
       console.log('Products fetched successfully:', data?.length || 0);
       setProducts(data || []);
+      
+      // Group products by category
+      const grouped = (data || []).reduce((acc: GroupedProducts, product) => {
+        const category = product.category || 'Other';
+        const categoryName = getCategoryDisplayName(category);
+        if (!acc[categoryName]) {
+          acc[categoryName] = [];
+        }
+        acc[categoryName].push(product);
+        return acc;
+      }, {});
+      
+      setGroupedProducts(grouped);
       
       // Initialize quantities
       const initialQuantities: { [key: string]: number } = {};
@@ -70,20 +90,30 @@ const Shop = () => {
     }
   };
 
+  const getCategoryDisplayName = (category: string) => {
+    switch (category) {
+      case 'chicken':
+        return 'Chicken';
+      case 'red_meat':
+        return 'Red Meat';
+      case 'chilli_condiments':
+        return 'Chilli Condiments';
+      default:
+        return 'Other';
+    }
+  };
+
   const handleBuyNow = async (product: Product) => {
     console.log('🛒 Buy Now clicked for product:', product.name);
     
     if (isAuthenticated) {
-      // For authenticated users: add to cart, refresh cart, then navigate
       try {
         console.log('🔄 Adding item to cart for authenticated user...');
         await addToCart(product.id, quantities[product.id] || 1);
         
-        // Refresh cart to ensure latest data
         console.log('🔄 Refreshing cart data...');
         await refreshCart();
         
-        // Small delay to ensure cart is updated
         setTimeout(() => {
           console.log('➡️ Navigating to checkout with updated cart...');
           navigate('/checkout');
@@ -98,7 +128,6 @@ const Shop = () => {
         });
       }
     } else {
-      // For guests: navigate directly with product data
       console.log('➡️ Guest checkout - navigating with product data...');
       navigate('/checkout', { 
         state: { 
@@ -125,19 +154,102 @@ const Shop = () => {
     setCartOpen(true);
   };
 
+  const renderProductCard = (product: Product) => {
+    const displayPrice = product.offer_price || product.price;
+    const hasOffer = product.offer_price && product.offer_price < product.price;
+
+    return (
+      <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="aspect-square">
+          <img
+            src={product.image_url || '/placeholder.svg'}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="p-2 md:p-4">
+          <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-1 md:mb-2 line-clamp-1">{product.name}</h3>
+          <p className="text-gray-600 text-xs md:text-sm mb-2 md:mb-3 line-clamp-2">
+            {product.description || 'No description available'}
+          </p>
+          <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="flex flex-col">
+              <span className="text-lg md:text-2xl font-bold text-black">₹{displayPrice}</span>
+              {hasOffer && (
+                <span className="text-sm text-gray-500 line-through">₹{product.price}</span>
+              )}
+            </div>
+            {product.stock_quantity !== null && (
+              <span className="text-xs md:text-sm text-gray-500">
+                Stock: {product.stock_quantity}
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center justify-center space-x-1 md:space-x-2 mb-2 md:mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateQuantity(product.id, -1)}
+              disabled={quantities[product.id] <= 1}
+              className="h-6 w-6 md:h-8 md:w-8 p-0 hover:bg-gray-100 transition-colors"
+            >
+              <Minus className="w-2 h-2 md:w-3 md:h-3" />
+            </Button>
+            <span className="text-xs md:text-sm font-medium px-1 md:px-3">{quantities[product.id] || 1}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateQuantity(product.id, 1)}
+              className="h-6 w-6 md:h-8 md:w-8 p-0 hover:bg-gray-100 transition-colors"
+            >
+              <Plus className="w-2 h-2 md:w-3 md:h-3" />
+            </Button>
+          </div>
+          
+          <div className="space-y-1 md:space-y-2">
+            <Button
+              onClick={() => handleBuyNow(product)}
+              className="w-full bg-gradient-to-r from-black to-gray-800 text-white hover:from-gray-800 hover:to-gray-900 text-xs md:text-sm py-2 md:py-2 transition-all duration-300 transform hover:scale-105"
+              disabled={product.stock_quantity === 0}
+            >
+              <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+              {product.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
+            </Button>
+            
+            <Button
+              onClick={() => handleAddToCart(product)}
+              variant="outline"
+              className="w-full text-xs md:text-sm py-2 md:py-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
+              disabled={product.stock_quantity === 0}
+            >
+              Add to Cart
+            </Button>
+            
+            <Button
+              onClick={() => navigate(`/product/${product.id}`)}
+              variant="ghost"
+              className="w-full text-xs md:text-sm py-1 md:py-2 hover:bg-gray-100 transition-colors"
+            >
+              View Details
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Layout>
-      {/* Cart Sidebar */}
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
 
-      {/* Cart Button - Fixed Position - Show for all users */}
       <Button
         onClick={handleCartClick}
-        className="fixed bottom-6 right-6 z-40 rounded-full h-14 w-14 bg-black text-white hover:bg-gray-800 shadow-lg"
+        className="fixed bottom-6 right-6 z-40 rounded-full h-14 w-14 bg-gradient-to-r from-black to-gray-800 text-white hover:from-gray-800 hover:to-gray-900 shadow-xl transition-all duration-300 transform hover:scale-110"
       >
         <ShoppingCart className="h-6 w-6" />
         {cartCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
             {cartCount}
           </span>
         )}
@@ -151,7 +263,6 @@ const Shop = () => {
             Discover our carefully crafted collection of traditional foods
           </p>
           
-          {/* Authentication Status */}
           <div className="mt-8">
             {isAuthenticated ? (
               <div className="flex items-center justify-center space-x-4">
@@ -162,7 +273,7 @@ const Shop = () => {
                 <Button 
                   onClick={handleCartClick}
                   variant="outline"
-                  className="text-white border-white hover:bg-white hover:text-black"
+                  className="text-white border-white hover:bg-white hover:text-black transition-all duration-300"
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   Cart ({cartCount})
@@ -175,14 +286,14 @@ const Shop = () => {
                   <Button 
                     onClick={() => navigate('/auth')}
                     variant="outline"
-                    className="text-white border-white hover:bg-white hover:text-black"
+                    className="text-white border-white hover:bg-white hover:text-black transition-all duration-300"
                   >
                     Sign In / Register
                   </Button>
                   <Button 
                     onClick={handleCartClick}
                     variant="outline"
-                    className="text-white border-white hover:bg-white hover:text-black"
+                    className="text-white border-white hover:bg-white hover:text-black transition-all duration-300"
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Cart ({cartCount})
@@ -194,7 +305,7 @@ const Shop = () => {
         </div>
       </section>
 
-      {/* Products Grid */}
+      {/* Products by Category */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
@@ -202,92 +313,30 @@ const Shop = () => {
               <Loader2 className="h-8 w-8 animate-spin" />
               <span className="ml-2 text-gray-600">Loading products...</span>
             </div>
-          ) : products.length > 0 ? (
+          ) : Object.keys(groupedProducts).length > 0 ? (
             <>
               <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">Available Products</h2>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  Choose from our selection of {products.length} premium products
+                  Choose from our selection of {products.length} premium products organized by category
                 </p>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
-                {products.map((product) => (
-                  <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-                    <div className="aspect-square">
-                      <img
-                        src={product.image_url || '/placeholder.svg'}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-2 md:p-4">
-                      <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-1 md:mb-2 line-clamp-1">{product.name}</h3>
-                      <p className="text-gray-600 text-xs md:text-sm mb-2 md:mb-3 line-clamp-2">
-                        {product.description || 'No description available'}
-                      </p>
-                      <div className="flex items-center justify-between mb-2 md:mb-4">
-                        <span className="text-lg md:text-2xl font-bold text-black">₹{product.price}</span>
-                        {product.stock_quantity !== null && (
-                          <span className="text-xs md:text-sm text-gray-500">
-                            Stock: {product.stock_quantity}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* Quantity Selector */}
-                      <div className="flex items-center justify-center space-x-1 md:space-x-2 mb-2 md:mb-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(product.id, -1)}
-                          disabled={quantities[product.id] <= 1}
-                          className="h-6 w-6 md:h-8 md:w-8 p-0"
-                        >
-                          <Minus className="w-2 h-2 md:w-3 md:h-3" />
-                        </Button>
-                        <span className="text-xs md:text-sm font-medium px-1 md:px-3">{quantities[product.id] || 1}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(product.id, 1)}
-                          className="h-6 w-6 md:h-8 md:w-8 p-0"
-                        >
-                          <Plus className="w-2 h-2 md:w-3 md:h-3" />
-                        </Button>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="space-y-1 md:space-y-2">
-                        <Button
-                          onClick={() => handleBuyNow(product)}
-                          className="w-full bg-black text-white hover:bg-gray-800 text-xs md:text-sm py-2 md:py-2"
-                          disabled={product.stock_quantity === 0}
-                        >
-                          <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                          {product.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
-                        </Button>
-                        
-                        <Button
-                          onClick={() => handleAddToCart(product)}
-                          variant="outline"
-                          className="w-full text-xs md:text-sm py-2 md:py-2"
-                          disabled={product.stock_quantity === 0}
-                        >
-                          Add to Cart
-                        </Button>
-                        
-                        <Button
-                          onClick={() => navigate(`/product/${product.id}`)}
-                          variant="ghost"
-                          className="w-full text-xs md:text-sm py-1 md:py-2"
-                        >
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
+
+              {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
+                <div key={category} className="mb-16">
+                  <div className="flex items-center mb-8">
+                    <h3 className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent">
+                      {category}
+                    </h3>
+                    <div className="flex-1 h-px bg-gradient-to-r from-gray-300 to-transparent ml-4"></div>
+                    <span className="text-sm text-gray-500 ml-4">{categoryProducts.length} items</span>
                   </div>
-                ))}
-              </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+                    {categoryProducts.map(renderProductCard)}
+                  </div>
+                </div>
+              ))}
             </>
           ) : (
             <div className="text-center py-20">
@@ -299,16 +348,15 @@ const Shop = () => {
             </div>
           )}
           
-          {/* Coming Soon Section */}
           {products.length > 0 && (
             <div className="mt-16 text-center">
-              <div className="bg-gray-50 p-8 rounded-lg shadow-md max-w-md mx-auto border border-gray-200">
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-8 rounded-xl shadow-lg max-w-md mx-auto border border-gray-200">
                 <h3 className="text-2xl font-bold text-black mb-4">More Products Coming Soon!</h3>
                 <p className="text-gray-600 mb-6">
                   We're constantly working on new flavors and products to add to our collection. 
                   Stay tuned for exciting additions to the Momsgoogoo Foods family.
                 </p>
-                <div className="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                <div className="bg-white p-4 rounded-lg border border-gray-300 shadow-sm">
                   <p className="text-black font-medium">
                     Sign up for our newsletter to be the first to know about new products!
                   </p>

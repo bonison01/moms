@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, Package, Truck, Phone, Search } from 'lucide-react';
+import { Edit, Save, X, Package, Truck, Phone, Search, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -59,7 +60,6 @@ const OrderManagement = () => {
   }, []);
 
   useEffect(() => {
-    // Filter orders based on search term
     if (searchTerm.trim() === '') {
       setFilteredOrders(orders);
     } else {
@@ -75,7 +75,6 @@ const OrderManagement = () => {
     try {
       console.log('Fetching orders...');
       
-      // First get all orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select(`
@@ -101,10 +100,8 @@ const OrderManagement = () => {
 
       console.log('Orders fetched:', ordersData);
 
-      // Get order items and user profiles for each order
       const ordersWithItems = await Promise.all(
         (ordersData || []).map(async (order) => {
-          // Get order items
           const { data: orderItems, error: itemsError } = await supabase
             .from('order_items')
             .select(`
@@ -121,7 +118,6 @@ const OrderManagement = () => {
             console.error('Error fetching order items:', itemsError);
           }
 
-          // Get user profile
           const { data: userProfile, error: profileError } = await supabase
             .from('profiles')
             .select('email, full_name')
@@ -177,7 +173,6 @@ const OrderManagement = () => {
       console.log('=== STARTING ORDER UPDATE ===');
       console.log('Order ID:', editingOrder.id);
       
-      // Prepare update data - ensure we only send what can be updated
       const updateData = {
         status: editingOrder.status,
         shipping_status: editingOrder.shipping_status,
@@ -189,7 +184,6 @@ const OrderManagement = () => {
 
       console.log('Update data:', updateData);
 
-      // First verify the order exists and user is admin
       const { data: currentUser } = await supabase.auth.getUser();
       console.log('Current user:', currentUser?.user?.id);
 
@@ -201,7 +195,6 @@ const OrderManagement = () => {
       
       console.log('User profile:', profile);
 
-      // Check if order exists
       const { data: existingOrder, error: checkError } = await supabase
         .from('orders')
         .select('id, status, shipping_status')
@@ -215,7 +208,6 @@ const OrderManagement = () => {
 
       console.log('Existing order:', existingOrder);
 
-      // Perform the update
       const { data: updateResult, error: updateError } = await supabase
         .from('orders')
         .update(updateData)
@@ -236,7 +228,6 @@ const OrderManagement = () => {
 
       console.log('Update successful:', updateResult[0]);
 
-      // Update the local state
       const updatedOrder = updateResult[0];
       setOrders(prevOrders => 
         prevOrders.map(order => 
@@ -297,6 +288,16 @@ const OrderManagement = () => {
     }
   };
 
+  const getShippingStatusIcon = (status: string) => {
+    switch (status) {
+      case 'delivered': return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'cancelled': return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case 'shipped':
+      case 'out_for_delivery': return <Truck className="h-4 w-4 text-blue-600" />;
+      default: return <Package className="h-4 w-4 text-orange-600" />;
+    }
+  };
+
   const getOrderStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'text-orange-600';
@@ -324,9 +325,8 @@ const OrderManagement = () => {
           <Package className="h-5 w-5" />
           <span>Order Management</span>
         </CardTitle>
-        <CardDescription>Manage orders and shipping status</CardDescription>
+        <CardDescription>Manage orders and shipping status with enhanced editing capabilities</CardDescription>
         
-        {/* Search functionality */}
         <div className="flex items-center space-x-2 mt-4">
           <Search className="h-4 w-4 text-gray-500" />
           <Input
@@ -364,7 +364,7 @@ const OrderManagement = () => {
               </TableHeader>
               <TableBody>
                 {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
+                  <TableRow key={order.id} className="hover:bg-gray-50 transition-colors">
                     <TableCell className="font-medium">
                       #{order.id.slice(0, 8)}
                     </TableCell>
@@ -405,7 +405,7 @@ const OrderManagement = () => {
                           </SelectContent>
                         </Select>
                       ) : (
-                        <span className={`capitalize ${getOrderStatusColor(order.status)}`}>
+                        <span className={`capitalize font-medium ${getOrderStatusColor(order.status)}`}>
                           {order.status}
                         </span>
                       )}
@@ -430,9 +430,12 @@ const OrderManagement = () => {
                           </SelectContent>
                         </Select>
                       ) : (
-                        <span className={`capitalize ${getShippingStatusColor(order.shipping_status)}`}>
-                          {getShippingStatusLabel(order.shipping_status)}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          {getShippingStatusIcon(order.shipping_status)}
+                          <span className={`capitalize font-medium ${getShippingStatusColor(order.shipping_status)}`}>
+                            {getShippingStatusLabel(order.shipping_status)}
+                          </span>
+                        </div>
                       )}
                     </TableCell>
                     <TableCell>
@@ -475,24 +478,24 @@ const OrderManagement = () => {
                       ) : (
                         <div className="text-sm">
                           {order.courier_name && (
-                            <div className="flex items-center space-x-1">
+                            <div className="flex items-center space-x-1 mb-1">
                               <Truck className="h-3 w-3" />
                               <span>{order.courier_name}</span>
                             </div>
                           )}
                           {order.courier_contact && (
-                            <div className="flex items-center space-x-1">
+                            <div className="flex items-center space-x-1 mb-1">
                               <Phone className="h-3 w-3" />
                               <span>{order.courier_contact}</span>
                             </div>
                           )}
                           {order.tracking_id && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">
                               ID: {order.tracking_id}
                             </div>
                           )}
                           {!order.courier_name && !order.courier_contact && !order.tracking_id && (
-                            <span className="text-gray-400">Not assigned</span>
+                            <span className="text-gray-400 italic">Not assigned</span>
                           )}
                         </div>
                       )}
@@ -505,9 +508,10 @@ const OrderManagement = () => {
                             size="sm" 
                             variant="default"
                             disabled={saving}
+                            className="bg-green-600 hover:bg-green-700"
                           >
                             <Save className="h-3 w-3" />
-                            {saving && <span className="ml-1">...</span>}
+                            {saving && <span className="ml-1 animate-pulse">...</span>}
                           </Button>
                           <Button 
                             onClick={handleCancelEdit} 
@@ -519,7 +523,12 @@ const OrderManagement = () => {
                           </Button>
                         </div>
                       ) : (
-                        <Button onClick={() => handleEdit(order)} size="sm" variant="outline">
+                        <Button 
+                          onClick={() => handleEdit(order)} 
+                          size="sm" 
+                          variant="outline"
+                          className="hover:bg-blue-50 hover:border-blue-300"
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
                       )}

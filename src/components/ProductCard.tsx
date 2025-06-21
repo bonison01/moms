@@ -1,5 +1,5 @@
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useCart } from '@/hooks/useCartContext';
 import { Button } from '@/components/ui/button';
@@ -10,15 +10,35 @@ import { Product } from '@/types/product';
 
 interface ProductCardProps {
   product: Product;
+  showBuyNowAndCart?: boolean; // New prop to control which buttons to show
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, showBuyNowAndCart = false }: ProductCardProps) => {
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const handleAddToCart = () => {
     if (isAuthenticated) {
       addToCart(product.id, 1);
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (isAuthenticated) {
+      // Add to cart and navigate to checkout
+      addToCart(product.id, 1).then(() => {
+        navigate('/checkout');
+      });
+    } else {
+      // Guest checkout with product data
+      navigate('/checkout', { 
+        state: { 
+          guestCheckout: true,
+          product: product,
+          quantity: 1
+        }
+      });
     }
   };
 
@@ -78,22 +98,58 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </div>
         </div>
         
-        <div className="flex space-x-2">
-          <Link to={`/product/${product.id}`} className="flex-1">
-            <Button variant="outline" className="w-full">
-              <Eye className="w-4 h-4 mr-2" />
-              View
-            </Button>
-          </Link>
-          
-          {isAuthenticated && product.stock_quantity > 0 && (
-            <Button 
-              onClick={handleAddToCart}
-              className="flex-1"
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Add to Cart
-            </Button>
+        <div className="space-y-2">
+          {showBuyNowAndCart ? (
+            <>
+              {/* Buy Now and Add to Cart buttons for signature products */}
+              <Button 
+                onClick={handleBuyNow}
+                className="w-full bg-black text-white hover:bg-gray-800"
+                disabled={product.stock_quantity === 0}
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                {product.stock_quantity === 0 ? 'Out of Stock' : 'Buy Now'}
+              </Button>
+              
+              {isAuthenticated && product.stock_quantity > 0 && (
+                <Button 
+                  onClick={handleAddToCart}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Add to Cart
+                </Button>
+              )}
+              
+              <Link to={`/product/${product.id}`} className="w-full">
+                <Button variant="ghost" className="w-full">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Details
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* Original buttons for other product displays */}
+              <div className="flex space-x-2">
+                <Link to={`/product/${product.id}`} className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    <Eye className="w-4 h-4 mr-2" />
+                    View
+                  </Button>
+                </Link>
+                
+                {isAuthenticated && product.stock_quantity > 0 && (
+                  <Button 
+                    onClick={handleAddToCart}
+                    className="flex-1"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Add to Cart
+                  </Button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </CardContent>

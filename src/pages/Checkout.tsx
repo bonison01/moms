@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/Layout';
 import OrderConfirmationModal from '@/components/OrderConfirmationModal';
+import PaymentScreenshotUpload from '@/components/PaymentScreenshotUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,6 +49,8 @@ const Checkout = () => {
   const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
   const [confirmedOrderData, setConfirmedOrderData] = useState<any>(null);
   const [checkoutInitialized, setCheckoutInitialized] = useState(false);
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
+  const [isUploadingScreenshot, setIsUploadingScreenshot] = useState(false);
   
   // Guest checkout data from navigation state
   const guestCheckoutData = location.state as { guestCheckout?: boolean; product?: any; quantity?: number } | null;
@@ -180,6 +183,17 @@ const Checkout = () => {
     }));
   };
 
+  const handleScreenshotUpload = (file: File) => {
+    setIsUploadingScreenshot(true);
+    setPaymentScreenshot(file);
+    setIsUploadingScreenshot(false);
+    
+    toast({
+      title: "Screenshot Uploaded",
+      description: "Payment screenshot has been attached to your order",
+    });
+  };
+
   const validateForm = () => {
     const required = ['full_name', 'email', 'address_line_1', 'city', 'state', 'postal_code', 'phone'];
     const missing = required.filter(field => !formData[field as keyof typeof formData]?.trim());
@@ -199,6 +213,16 @@ const Checkout = () => {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate payment screenshot for online payment
+    if (paymentMethod === 'online' && !paymentScreenshot) {
+      toast({
+        title: "Payment Screenshot Required",
+        description: "Please upload your payment screenshot to complete the order",
         variant: "destructive",
       });
       return false;
@@ -231,6 +255,27 @@ const Checkout = () => {
     } catch (error) {
       console.error('❌ Email sending exception:', error);
       // Don't show error to user as order was successful
+    }
+  };
+
+  const uploadPaymentScreenshot = async (file: File, orderId: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `payment-screenshot-${orderId}.${fileExt}`;
+      
+      // For now, we'll create a data URL since we don't have storage set up
+      // In a real implementation, you'd upload to Supabase Storage
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      return new Promise((resolve) => {
+        reader.onload = () => {
+          resolve(reader.result as string);
+        };
+      });
+    } catch (error) {
+      console.error('Error uploading payment screenshot:', error);
+      return null;
     }
   };
 
@@ -311,7 +356,8 @@ const Checkout = () => {
         payment_method: paymentMethod,
         delivery_address: deliveryAddress,
         phone: formData.phone,
-        status: 'pending'
+        status: 'pending',
+        payment_screenshot_url: null // Will be updated after upload
       };
 
       console.log('📦 Creating order with data:', orderData);
@@ -332,6 +378,26 @@ const Checkout = () => {
       }
 
       console.log('✅ Order created successfully:', order.id);
+
+      // Upload payment screenshot if provided
+      let screenshotUrl = null;
+      if (paymentScreenshot && paymentMethod === 'online') {
+        screenshotUrl = await uploadPaymentScreenshot(paymentScreenshot, order.id);
+        
+        if (screenshotUrl) {
+          // Update order with screenshot URL
+          const { error: updateError } = await supabase
+            .from('orders')
+            .update({ payment_screenshot_url: screenshotUrl })
+            .eq('id', order.id);
+
+          if (updateError) {
+            console.error('❌ Error updating order with screenshot:', updateError);
+          } else {
+            console.log('✅ Order updated with payment screenshot');
+          }
+        }
+      }
 
       // Create order items
       const orderItemsWithOrderId = orderItems.map(item => ({
@@ -665,19 +731,28 @@ const Checkout = () => {
                     </Label>
                   </div>
                   
-                  <div className="flex items-center space-x-2 p-3 border rounded-lg opacity-50">
-                    <RadioGroupItem value="online" id="online" disabled />
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                    <RadioGroupItem value="online" id="online" />
                     <Label htmlFor="online" className="flex items-center space-x-2 cursor-pointer flex-1">
                       <CreditCard className="h-5 w-5" />
                       <div>
-                        <p className="font-medium">Online Payment</p>
-                        <p className="text-sm text-gray-600">Coming soon</p>
+                        <p className="font-medium">Online Payment (UPI)</p>
+                        <p className="text-sm text-gray-600">Pay using UPI, scan QR code below</p>
                       </div>
                     </Label>
                   </div>
                 </RadioGroup>
               </CardContent>
             </Card>
+
+            {/* Payment Screenshot Upload - Show only for online payment */}
+            {paymentMethod === 'online' && (
+              <PaymentScreenshotUpload 
+                onScreenshotUpload={handleScreenshotUpload}
+                isUploading={isUploadingScreenshot}
+                uploadedFile={paymentScreenshot}
+              />
+            )}
 
             {/* Place Order Button */}
             <Button

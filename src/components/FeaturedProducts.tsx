@@ -67,7 +67,7 @@ const FeaturedProducts = () => {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {products.map((product) => (
           <div key={product.id} className="group">
-            <ProductCard product={product} />
+            <ProductCard product={product} showBuyNowAndCart={true} />
           </div>
         ))}
       </div>

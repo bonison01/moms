@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Save, X, Package, Truck, Phone, Search, CheckCircle, AlertCircle } from 'lucide-react';
+import { Edit, Save, X, Package, Truck, Phone, Search, CheckCircle, AlertCircle, Image, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface Order {
   id: string;
@@ -16,6 +16,7 @@ interface Order {
   total_amount: number;
   status: string;
   payment_method: string;
+  payment_screenshot_url: string | null;
   delivery_address: any;
   phone: string;
   shipping_status: string;
@@ -83,6 +84,7 @@ const OrderManagement = () => {
           total_amount,
           status,
           payment_method,
+          payment_screenshot_url,
           delivery_address,
           phone,
           shipping_status,
@@ -356,6 +358,7 @@ const OrderManagement = () => {
                   <TableHead>Customer</TableHead>
                   <TableHead>Items</TableHead>
                   <TableHead>Amount</TableHead>
+                  <TableHead>Payment</TableHead>
                   <TableHead>Order Status</TableHead>
                   <TableHead>Shipping Status</TableHead>
                   <TableHead>Courier Info</TableHead>
@@ -385,6 +388,45 @@ const OrderManagement = () => {
                       </div>
                     </TableCell>
                     <TableCell>₹{order.total_amount}</TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="capitalize">{order.payment_method}</span>
+                        </div>
+                        {order.payment_screenshot_url && (
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="flex items-center space-x-1"
+                              >
+                                <Image className="h-3 w-3" />
+                                <span>View Screenshot</span>
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle>Payment Screenshot - Order #{order.id.slice(0, 8)}</DialogTitle>
+                              </DialogHeader>
+                              <div className="mt-4">
+                                <img 
+                                  src={order.payment_screenshot_url} 
+                                  alt="Payment Screenshot"
+                                  className="w-full h-auto rounded-lg shadow-lg"
+                                />
+                                <p className="text-sm text-gray-500 mt-2">
+                                  Uploaded by customer for payment verification
+                                </p>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+                        {!order.payment_screenshot_url && order.payment_method === 'online' && (
+                          <span className="text-xs text-gray-400 italic">No screenshot uploaded</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {editingOrder?.id === order.id ? (
                         <Select

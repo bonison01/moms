@@ -12,10 +12,10 @@ interface PaymentScreenshotUploadProps {
   uploadedFile?: File | null;
 }
 
-const PaymentScreenshotUpload = ({ 
-  onScreenshotUpload, 
-  isUploading, 
-  uploadedFile 
+const PaymentScreenshotUpload = ({
+  onScreenshotUpload,
+  isUploading,
+  uploadedFile
 }: PaymentScreenshotUploadProps) => {
   const [dragActive, setDragActive] = useState(false);
   const { toast } = useToast();
@@ -34,7 +34,7 @@ const PaymentScreenshotUpload = ({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelection(e.dataTransfer.files[0]);
     }
@@ -84,7 +84,7 @@ const PaymentScreenshotUpload = ({
           <div className="flex justify-center mb-4">
             <div className="bg-white p-4 rounded-lg shadow-md">
               <img
-                src="/lovable-uploads/96a97ecf-07a2-4ca9-90c6-5bef5e37e2c2.png"
+                src="/lovable-uploads/qr.png"
                 alt="Payment QR Code"
                 className="w-48 h-48 mx-auto"
               />
@@ -124,13 +124,12 @@ const PaymentScreenshotUpload = ({
             Upload Payment Screenshot *
           </Label>
           <div
-            className={`mt-2 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-              dragActive
+            className={`mt-2 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive
                 ? 'border-blue-400 bg-blue-50'
                 : uploadedFile
-                ? 'border-green-400 bg-green-50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
+                  ? 'border-green-400 bg-green-50'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}

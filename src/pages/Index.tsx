@@ -200,9 +200,9 @@ const Index = () => {
             </div>
             <div className="lg:pl-8">
               <img
-                src="https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=600&h=400&fit=crop"
-                alt="Traditional cooking"
-                className="rounded-lg shadow-lg w-full grayscale"
+                src="/lovable-uploads/4bc6545c-7534-4226-a449-57d2a1ba0aba.png"
+                alt="Traditional family cooking"
+                className="rounded-lg shadow-lg w-full object-cover h-96"
               />
             </div>
           </div>

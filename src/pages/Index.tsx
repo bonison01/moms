@@ -123,6 +123,22 @@ const Index = () => {
       {/* Banner Carousel */}
       <BannerCarousel />
 
+
+
+      {/* Featured Products - With Title */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
+              Our Best Selling Products
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Discover our most loved authentic Manipuri foods, crafted with traditional recipes and premium ingredients
+            </p>
+          </div>
+          <FeaturedProducts />
+        </div>
+      </section>
       {/* Customer Login Section - Only show if not authenticated */}
       {!isAuthenticated && (
         <section className="py-12 bg-blue-50">
@@ -158,38 +174,22 @@ const Index = () => {
           </div>
         </section>
       )}
-
-      {/* Featured Products - With Title */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
-              Our Signature Products
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover our most loved authentic Manipuri foods, crafted with traditional recipes and premium ingredients
-            </p>
-          </div>
-          <FeaturedProducts />
-        </div>
-      </section>
-
       {/* About Preview */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-black mb-6">
-                Made with Love, Served with Pride
+                The GooGoo Foods Story
               </h2>
+              <h4 className="text-1xl md:text-2xl text-black mb-4">
+                Bringing Manipur’s kitchen to yours.
+              </h4><br />
               <p className="text-lg text-gray-600 mb-6">
-                At Momsgoogoo Foods, we believe that the best flavors come from time-honored 
-                traditions and the finest ingredients. Every jar, every bite tells a story 
-                of heritage and passion for authentic taste.
+                Mom’s by GooGoo Foods is a mom-daughter venture serving ready-to-eat side dishes inspired by traditional Manipuri recipes. Born from love and rooted in heritage, our mission is to bring the comfort of home-cooked meals to busy women, students, and anyone craving the flavors of home.
               </p>
               <p className="text-lg text-gray-600 mb-8">
-                Our products are crafted in small batches using traditional methods, 
-                ensuring that each item meets our high standards for quality and flavor.
+                Crafted with indigenous spices and herbs from Manipur, our dishes celebrate regional taste while supporting local communities. Whether you're short on time or far from home, Mom’s is here to bring the taste of Manipur to your table—quick, authentic, and full of heart.
               </p>
               <Link
                 to="/about"
@@ -220,7 +220,7 @@ const Index = () => {
               Real reviews from our valued customers across India
             </p>
           </div>
-          
+
           {reviews.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {reviews.map((review) => (
@@ -258,7 +258,7 @@ const Index = () => {
               ))}
             </div>
           )}
-          
+
           <div className="text-center mt-8">
             <Link
               to="/reviews"

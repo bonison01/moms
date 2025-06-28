@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -6,11 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Package, LogOut, Home } from 'lucide-react';
+import { Plus, Package, LogOut, Home, Upload } from 'lucide-react';
 import OrderManagement from '@/components/OrderManagement';
 import BannerManagement from '@/components/BannerManagement';
 import ProductList from '@/components/ProductManagementComponents/ProductList';
 import ProductForm from '@/components/ProductManagementComponents/ProductForm';
+import CSVUpload from '@/components/ProductManagementComponents/CSVUpload';
 import { Product } from '@/types/product';
 
 const ProductManagement = () => {
@@ -22,6 +22,7 @@ const ProductManagement = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingImages, setEditingImages] = useState<string[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [showCSVUpload, setShowCSVUpload] = useState(false);
   const [newProductImages, setNewProductImages] = useState<string[]>([]);
   const [newProduct, setNewProduct] = useState<Product>({
     id: '',
@@ -216,6 +217,11 @@ const ProductManagement = () => {
     }
   };
 
+  const handleCSVProductsUploaded = (uploadedProducts: Product[]) => {
+    setProducts([...uploadedProducts, ...products]);
+    setShowCSVUpload(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -284,10 +290,20 @@ const ProductManagement = () => {
             <TabsContent value="products">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Products</h2>
-                <Button onClick={() => setIsCreating(true)} className="flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
-                  <span>Add Product</span>
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    onClick={() => setShowCSVUpload(true)} 
+                    variant="outline"
+                    className="flex items-center space-x-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Bulk Upload</span>
+                  </Button>
+                  <Button onClick={() => setIsCreating(true)} className="flex items-center space-x-2">
+                    <Plus className="h-4 w-4" />
+                    <span>Add Product</span>
+                  </Button>
+                </div>
               </div>
 
               <ProductList
@@ -298,6 +314,25 @@ const ProductManagement = () => {
               />
             </TabsContent>
           </Tabs>
+
+          {/* CSV Upload Modal */}
+          {showCSVUpload && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+              <div className="relative p-4 w-full max-w-2xl">
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowCSVUpload(false)}
+                    className="absolute top-2 right-2 z-10"
+                  >
+                    ×
+                  </Button>
+                  <CSVUpload onProductsUploaded={handleCSVProductsUploaded} />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Edit Product Modal */}
           {editingProduct && (

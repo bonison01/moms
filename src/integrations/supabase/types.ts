@@ -429,7 +429,7 @@ export type Database = {
       }
     }
     Enums: {
-      product_category: "chicken" | "red_meat" | "chilli_condiments" | "other"
+      product_category: "Chicken products" | "Chilli Condiment" | "Red Meat Products" | "Other"
       user_role: "admin" | "paying_user" | "free_user"
     }
     CompositeTypes: {
@@ -546,7 +546,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      product_category: ["chicken", "red_meat", "chilli_condiments", "other"],
+      product_category: ["Chicken products", "Chilli Condiment", "Red Meat Products", "other"],
       user_role: ["admin", "paying_user", "free_user"],
     },
   },

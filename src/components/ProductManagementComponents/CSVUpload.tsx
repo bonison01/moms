@@ -13,6 +13,22 @@ interface CSVUploadProps {
   onProductsUploaded: (products: Product[]) => void;
 }
 
+interface ProductInsert {
+  name: string;
+  description?: string | null;
+  price: number;
+  offer_price?: number | null;
+  category?: 'chicken' | 'red_meat' | 'chilli_condiments' | 'other' | null;
+  stock_quantity?: number | null;
+  is_active?: boolean | null;
+  featured?: boolean | null;
+  features?: string[] | null;
+  ingredients?: string | null;
+  offers?: string | null;
+  image_url?: string | null;
+  image_urls?: string[] | null;
+}
+
 const CSVUpload = ({ onProductsUploaded }: CSVUploadProps) => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -69,7 +85,7 @@ Spicy Red Meat,Premium red meat with spices,499.99,,red_meat,30,true,false,"Prem
     });
   };
 
-  const processCSVData = (data: any[]): Partial<Product>[] => {
+  const processCSVData = (data: any[]): ProductInsert[] => {
     return data.map(row => ({
       name: row.name || '',
       description: row.description || null,

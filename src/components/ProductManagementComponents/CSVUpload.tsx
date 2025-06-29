@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +17,7 @@ interface ProductInsert {
   description?: string | null;
   price: number;
   offer_price?: number | null;
-  category?: 'chicken' | 'red_meat' | 'chilli_condiments' | 'other' | null;
+  category?: string | null;
   stock_quantity?: number | null;
   is_active?: boolean | null;
   featured?: boolean | null;
@@ -91,7 +90,7 @@ Spicy Red Meat,Premium red meat with spices,499.99,,red_meat,30,true,false,"Prem
       description: row.description || null,
       price: parseFloat(row.price) || 0,
       offer_price: row.offer_price ? parseFloat(row.offer_price) : null,
-      category: row.category as 'chicken' | 'red_meat' | 'chilli_condiments' | 'other' || null,
+      category: row.category || null,
       stock_quantity: parseInt(row.stock_quantity) || 0,
       is_active: row.is_active === 'true' || row.is_active === '1',
       featured: row.featured === 'true' || row.featured === '1',

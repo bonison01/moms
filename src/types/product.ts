@@ -7,7 +7,7 @@ export interface Product {
   offer_price: number | null;
   image_url: string | null;
   image_urls: string[] | null;
-  category: 'chicken' | 'red_meat' | 'chilli_condiments' | 'other' | null;
+  category: string | null;
   features: string[] | null;
   ingredients: string | null;
   offers: string | null;

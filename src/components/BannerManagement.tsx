@@ -89,8 +89,20 @@ const BannerManagement = () => {
     setSaving(true);
     try {
       const updatedBanner = {
-        ...banner,
+        title: banner.title,
+        subtitle: banner.subtitle,
         image_url: editingImages.length > 0 ? editingImages[0] : banner.image_url,
+        button_text: banner.button_text,
+        button_link: banner.button_link,
+        secondary_button_text: banner.secondary_button_text,
+        secondary_button_link: banner.secondary_button_link,
+        is_active: banner.is_active,
+        is_published: banner.is_published,
+        banner_height: banner.banner_height,
+        banner_width: banner.banner_width,
+        text_position: banner.text_position,
+        image_position: banner.image_position,
+        overlay_opacity: banner.overlay_opacity,
         updated_at: new Date().toISOString(),
       };
 
@@ -103,7 +115,8 @@ const BannerManagement = () => {
         throw error;
       }
 
-      setBanners(banners.map(b => b.id === banner.id ? updatedBanner : b));
+      // Update local state with the saved banner
+      setBanners(banners.map(b => b.id === banner.id ? { ...b, ...updatedBanner } : b));
       setEditingBanner(null);
       setEditingImages([]);
       toast({
@@ -137,6 +150,11 @@ const BannerManagement = () => {
         is_active: true,
         is_published: true,
         display_order: maxOrder + 1,
+        banner_height: 350,
+        banner_width: 100,
+        text_position: 'center',
+        image_position: 'center',
+        overlay_opacity: 60,
       };
 
       const { data, error } = await supabase

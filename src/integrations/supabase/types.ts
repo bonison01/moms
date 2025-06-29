@@ -52,47 +52,62 @@ export type Database = {
       }
       banner_settings: {
         Row: {
+          banner_height: number | null
+          banner_width: number | null
           button_link: string
           button_text: string
           created_at: string
           display_order: number | null
           id: string
+          image_position: string | null
           image_url: string
           is_active: boolean
           is_published: boolean | null
+          overlay_opacity: number | null
           secondary_button_link: string
           secondary_button_text: string
           subtitle: string
+          text_position: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          banner_height?: number | null
+          banner_width?: number | null
           button_link?: string
           button_text?: string
           created_at?: string
           display_order?: number | null
           id?: string
+          image_position?: string | null
           image_url?: string
           is_active?: boolean
           is_published?: boolean | null
+          overlay_opacity?: number | null
           secondary_button_link?: string
           secondary_button_text?: string
           subtitle?: string
+          text_position?: string | null
           title?: string
           updated_at?: string
         }
         Update: {
+          banner_height?: number | null
+          banner_width?: number | null
           button_link?: string
           button_text?: string
           created_at?: string
           display_order?: number | null
           id?: string
+          image_position?: string | null
           image_url?: string
           is_active?: boolean
           is_published?: boolean | null
+          overlay_opacity?: number | null
           secondary_button_link?: string
           secondary_button_text?: string
           subtitle?: string
+          text_position?: string | null
           title?: string
           updated_at?: string
         }

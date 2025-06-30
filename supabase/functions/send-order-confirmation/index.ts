@@ -36,25 +36,35 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('📧 Email confirmation request received');
     
     const { email, orderData }: OrderConfirmationRequest = await req.json();
+    console.log('📨 Sending email to:', email);
+    console.log('🆔 Order ID:', orderData.id);
     
-    // Gmail SMTP configuration - credentials will be added manually later
+    // Gmail SMTP configuration
     const gmailUsername = Deno.env.get('GMAIL_USERNAME') || '';
     const gmailPassword = Deno.env.get('GMAIL_PASSWORD') || '';
     
+    console.log('📋 Gmail username configured:', gmailUsername ? 'Yes' : 'No');
+    console.log('🔑 Gmail password configured:', gmailPassword ? 'Yes (length: ' + gmailPassword.length + ')' : 'No');
+    
     if (!gmailUsername || !gmailPassword) {
-      console.log('⚠️ Gmail credentials not configured');
+      console.log('⚠️ Gmail credentials not configured properly');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Gmail credentials not configured' 
+          message: 'Gmail credentials not configured properly',
+          details: {
+            username: gmailUsername ? 'configured' : 'missing',
+            password: gmailPassword ? 'configured' : 'missing'
+          }
         }),
         {
-          status: 200, // Don't fail the order if email can't be sent
+          status: 200,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
       );
     }
 
+    console.log('🔌 Creating SMTP client...');
     const client = new SMTPClient({
       connection: {
         hostname: "smtp.gmail.com",
@@ -144,6 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
+    console.log('📤 Attempting to send email...');
     await client.send({
       from: gmailUsername,
       to: email,
@@ -152,6 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
+    console.log('🔌 Closing SMTP connection...');
     await client.close();
 
     console.log('✅ Order confirmation email sent successfully to:', email);
@@ -165,16 +177,22 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error('❌ Error sending email:', error);
+    console.error('❌ Detailed error sending email:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      cause: error.cause
+    });
     
     return new Response(
       JSON.stringify({ 
         success: false, 
         error: error.message,
+        errorName: error.name,
         message: 'Failed to send confirmation email' 
       }),
       {
-        status: 200, // Don't fail the order if email can't be sent
+        status: 200,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       }
     );

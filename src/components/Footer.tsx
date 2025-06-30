@@ -11,11 +11,11 @@ const Footer = () => {
             <div className="flex items-center mb-4">
               <img 
                 src="/lovable-uploads/ced66691-b3da-4bb5-b26c-c54b76e6ee51.png" 
-                alt="Momsgoogoo Foods" 
+                alt="Googoo Foods" 
                 className="h-8 w-auto mr-3"
                 loading="lazy"
               />
-              <span className="text-2xl font-bold text-white">Momsgoogoo</span>
+              <span className="text-2xl font-bold text-white">Googoo</span>
               <span className="text-2xl font-bold text-gray-300 ml-1">Foods</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
@@ -61,7 +61,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
           <p className="text-gray-300">
-            © 2024 Momsgoogoo Foods. All rights reserved.
+            © 2024 Googoo Foods. All rights reserved.
           </p>
         </div>
       </div>

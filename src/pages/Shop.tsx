@@ -477,7 +477,7 @@ const Shop = () => {
                 <h3 className="text-2xl font-bold text-black mb-4">More Products Coming Soon!</h3>
                 <p className="text-gray-600 mb-6">
                   We're constantly working on new flavors and products to add to our collection. 
-                  Stay tuned for exciting additions to the Momsgoogoo Foods family.
+                  Stay tuned for exciting additions to the Googoo Foods family.
                 </p>
                 <div className="bg-white p-4 rounded-lg border border-gray-300 shadow-sm">
                   <p className="text-black font-medium">

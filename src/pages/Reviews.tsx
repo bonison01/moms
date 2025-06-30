@@ -68,7 +68,7 @@ const Reviews = () => {
           {/* Reviews from Database */}
           <section className="py-16 bg-white">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <ReviewsList 
+              <ReviewsList
                 refreshTrigger={reviewsRefreshTrigger}
               />
 
@@ -77,11 +77,11 @@ const Reviews = () => {
                 <div className="bg-gray-50 p-8 rounded-lg max-w-2xl mx-auto border border-gray-200">
                   <h3 className="text-2xl font-bold text-black mb-4">Share Your Experience</h3>
                   <p className="text-gray-600 mb-6">
-                    Have you tried our products? We'd love to hear about your experience! 
-                    Your feedback helps us continue to improve and helps other customers 
+                    Have you tried our products? We'd love to hear about your experience!
+                    Your feedback helps us continue to improve and helps other customers
                     make informed decisions.
                   </p>
-                  <button 
+                  <button
                     onClick={handleWriteReview}
                     className="bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
                   >
@@ -112,13 +112,13 @@ const Reviews = () => {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-black mb-4">Write a Review</h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Share your experience with Momsgoogoo Foods
+                Share your experience with Googoo Foods
               </p>
             </div>
 
             {isAuthenticated ? (
               <div className="max-w-2xl mx-auto">
-                <ReviewForm 
+                <ReviewForm
                   onReviewSubmitted={handleReviewSubmitted}
                 />
               </div>
@@ -129,7 +129,7 @@ const Reviews = () => {
                   <p className="text-gray-600 mb-6">
                     Please sign in to your account to write a review.
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => navigate('/auth')}
                     className="bg-black text-white hover:bg-gray-800"
                   >
@@ -149,7 +149,7 @@ const Reviews = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Write a Review</h2>
-                <button 
+                <button
                   onClick={() => setShowReviewForm(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >

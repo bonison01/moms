@@ -131,7 +131,7 @@ const Contact = () => {
                   <div className="space-y-3">
                     <div>
                       <span className="font-medium text-gray-700">Email:</span>
-                      <span className="text-gray-600 ml-2">hello@momsgoogoofoods.com</span>
+                      <span className="text-gray-600 ml-2">hello@googoofoods.com</span>
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Phone:</span>

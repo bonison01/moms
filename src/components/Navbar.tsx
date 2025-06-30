@@ -45,11 +45,11 @@ const Navbar = () => {
               <Link to="/" className="flex items-center space-x-2">
                 <img
                   src="/lovable-uploads/ced66691-b3da-4bb5-b26c-c54b76e6ee51.png"
-                  alt="Momsgoogoo Foods"
+                  alt="Googoo Foods"
                   className="h-10 w-auto"
                 />
                 <span className="text-xl font-bold text-white hidden sm:block">
-                  Momsgoogoo Foods
+                  Googoo Foods
                 </span>
               </Link>
             </div>

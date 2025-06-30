@@ -19,7 +19,7 @@ const About = () => {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-lg max-w-none">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">The Beginning of Momsgoogoo Foods</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-6">The Beginning of Googoo Foods</h2>
 
             <p className="text-lg text-gray-600 mb-6">
               From our home to yours
@@ -67,11 +67,6 @@ const About = () => {
               <li>Made with care, like home</li>
             </ul>
 
-            {/* <p className="text-lg text-gray-600 mb-6">
-              When you choose Momsgoogoo Foods, you're not just buying a product – you're becoming
-              part of a tradition that values quality, authenticity, and the joy of sharing great
-              food with the people you love.
-            </p> */}
 
             <div className="bg-gray-50 p-8 rounded-lg text-center">
               <p className="text-xl text-gray-800 font-medium mb-4">

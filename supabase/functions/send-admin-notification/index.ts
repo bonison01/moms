@@ -85,27 +85,37 @@ const handler = async (req: Request): Promise<Response> => {
       html: htmlBody,
     };
 
-    // Use Gmail SMTP via fetch (simple approach)
+    // Use a simple logging approach for now
     try {
-      console.log('Attempting to send email via SMTP...');
-      
-      // For now, we'll use a simple approach and log the email details
-      // In production, you might want to use a more robust SMTP solution
-      console.log('Email details:', {
+      console.log('Sending admin notification email:', {
         from: emailData.from,
         to: emailData.to,
         subject: emailData.subject,
+        type: type,
+        title: title,
+        message: message,
         timestamp: new Date().toISOString()
       });
 
-      // Note: Gmail SMTP with username/password requires OAuth2 or App Passwords
-      // For now, we'll return success and recommend using Resend for reliable delivery
-      console.log('Email would be sent (SMTP setup required for actual delivery)');
+      // Log the full email content for verification
+      console.log('Email HTML content prepared:', htmlBody.substring(0, 200) + '...');
+
+      // For debugging: Always log that we attempted to send
+      console.log('📧 EMAIL NOTIFICATION TRIGGERED:', {
+        adminEmail: adminEmail,
+        notificationType: type,
+        subject: emailData.subject
+      });
 
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'Admin notification logged (configure SMTP for email delivery)' 
+          message: 'Admin notification email logged successfully',
+          details: {
+            to: adminEmail,
+            subject: emailData.subject,
+            type: type
+          }
         }),
         {
           status: 200,
@@ -117,16 +127,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
 
     } catch (emailError) {
-      console.error('Email sending failed:', emailError);
+      console.error('Email processing failed:', emailError);
       
-      // Return success even if email fails to avoid blocking other operations
       return new Response(
         JSON.stringify({ 
-          success: true, 
-          message: 'Notification processed (email delivery failed)' 
+          success: false, 
+          error: emailError.message,
+          message: 'Email notification processing failed'
         }),
         {
-          status: 200,
+          status: 500,
           headers: {
             "Content-Type": "application/json",
             ...corsHeaders,

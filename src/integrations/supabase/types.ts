@@ -453,6 +453,22 @@ export type Database = {
         Args: { user_email: string }
         Returns: undefined
       }
+      request_password_reset: {
+        Args: { user_email: string; user_phone: string }
+        Returns: {
+          error_message: string
+          reset_code: string
+          success: boolean
+        }[]
+      }
+      verify_reset_code: {
+        Args: { code: string; user_email: string; user_phone: string }
+        Returns: {
+          error_message: string
+          success: boolean
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       product_category: "chicken" | "red_meat" | "chilli_condiments" | "other"

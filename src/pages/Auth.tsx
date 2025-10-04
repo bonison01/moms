@@ -185,42 +185,32 @@ const Auth = () => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Verify email and phone match
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email, phone')
-        .eq('email', email)
-        .eq('phone', phone)
-        .single();
+      // Use secure function to verify email/phone and generate reset code
+      const { data, error: rpcError } = await supabase
+        .rpc('request_password_reset', {
+          user_email: email.trim(),
+          user_phone: phone.trim()
+        });
 
-      if (profileError || !profile) {
-        setError('Email and phone number do not match our records');
+      if (rpcError) {
+        console.error('Reset request RPC error:', rpcError);
+        setError('Failed to process reset request');
         setActionLoading(false);
         return;
       }
 
-      // Generate 6-digit code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-      // Store code in database
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          reset_code: code,
-          reset_code_expires: expiresAt.toISOString()
-        })
-        .eq('id', profile.id);
-
-      if (updateError) {
-        setError('Failed to generate reset code');
+      // data is an array with one result
+      const result = data?.[0];
+      
+      if (!result?.success) {
+        setError(result?.error_message || 'Email and phone number do not match our records');
         setActionLoading(false);
         return;
       }
 
       toast({
         title: "Reset code generated",
-        description: `Your reset code is: ${code}. It expires in 15 minutes.`,
+        description: `Your reset code is: ${result.reset_code}. It expires in 15 minutes.`,
         duration: 10000,
       });
 
@@ -256,51 +246,28 @@ const Auth = () => {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Verify code
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, reset_code, reset_code_expires')
-        .eq('email', email)
-        .eq('phone', phone)
-        .single();
-
-      if (profileError || !profile) {
-        setError('Invalid email or phone number');
-        setActionLoading(false);
-        return;
-      }
-
-      if (profile.reset_code !== resetCode) {
-        setError('Invalid reset code');
-        setActionLoading(false);
-        return;
-      }
-
-      if (!profile.reset_code_expires || new Date(profile.reset_code_expires) < new Date()) {
-        setError('Reset code has expired. Please request a new one.');
-        setActionLoading(false);
-        return;
-      }
-
-      // Update password using Supabase admin API
-      const { error: passwordError } = await supabase.auth.updateUser({
-        password: newPassword
+      // Call edge function to securely reset password
+      const { data, error: functionError } = await supabase.functions.invoke('reset-password', {
+        body: {
+          email: email.trim(),
+          phone: phone.trim(),
+          code: resetCode.trim(),
+          newPassword: newPassword
+        }
       });
 
-      if (passwordError) {
-        setError('Failed to update password');
+      if (functionError) {
+        console.error('Reset password function error:', functionError);
+        setError('Failed to reset password. Please try again.');
         setActionLoading(false);
         return;
       }
 
-      // Clear reset code
-      await supabase
-        .from('profiles')
-        .update({
-          reset_code: null,
-          reset_code_expires: null
-        })
-        .eq('id', profile.id);
+      if (data?.error) {
+        setError(data.error);
+        setActionLoading(false);
+        return;
+      }
 
       toast({
         title: "Password reset successful",

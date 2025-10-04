@@ -229,13 +229,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            full_name: fullName || '',
-            phone: phone || '',
-          },
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          full_name: fullName || '',
+          phone: phone || '',
         },
+      },
       });
 
       if (error) {
@@ -286,20 +286,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user && !!session;
   const isAdmin = profile?.role === 'admin';
   const isUser = profile?.role === 'user';
-
-  // Log current auth state for debugging
-  console.log('📊 Auth State:', {
-    user: !!user,
-    session: !!session,
-    profile: !!profile,
-    loading,
-    profileLoading,
-    isAuthenticated,
-    isAdmin,
-    isUser,
-    userEmail: user?.email,
-    profileRole: profile?.role
-  });
 
   const value: AuthContextType = {
     // State

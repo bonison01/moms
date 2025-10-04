@@ -20,10 +20,16 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
+  
+  // Password reset states
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetStep, setResetStep] = useState<'request' | 'verify'>('request');
 
   // Hooks
   const { signIn, signUp, isAuthenticated, isAdmin, loading } = useAuth();
@@ -60,8 +66,12 @@ const Auth = () => {
     setEmail('');
     setPassword('');
     setFullName('');
+    setPhone('');
     setConfirmPassword('');
     setError('');
+    setResetCode('');
+    setNewPassword('');
+    setResetStep('request');
   };
 
   /**
@@ -113,7 +123,7 @@ const Auth = () => {
     setError('');
 
     // Validation
-    if (!email || !password || !confirmPassword || !fullName) {
+    if (!email || !password || !confirmPassword || !fullName || !phone) {
       setError('Please fill in all fields');
       setActionLoading(false);
       return;
@@ -133,7 +143,7 @@ const Auth = () => {
 
     try {
       console.log('📝 Submitting signup form for:', email);
-      const { error } = await signUp(email, password, fullName);
+      const { error } = await signUp(email, password, fullName, phone);
       
       if (error) {
         console.error('❌ Signup failed:', error);
@@ -153,6 +163,155 @@ const Auth = () => {
       setActionLoading(false);
     } catch (error: any) {
       console.error('💥 Signup exception:', error);
+      setError('An unexpected error occurred');
+      setActionLoading(false);
+    }
+  };
+
+  /**
+   * Handle forgot password - request reset code
+   */
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionLoading(true);
+    setError('');
+
+    if (!email || !phone) {
+      setError('Please enter both email and phone number');
+      setActionLoading(false);
+      return;
+    }
+
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Verify email and phone match
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email, phone')
+        .eq('email', email)
+        .eq('phone', phone)
+        .single();
+
+      if (profileError || !profile) {
+        setError('Email and phone number do not match our records');
+        setActionLoading(false);
+        return;
+      }
+
+      // Generate 6-digit code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      // Store code in database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          reset_code: code,
+          reset_code_expires: expiresAt.toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (updateError) {
+        setError('Failed to generate reset code');
+        setActionLoading(false);
+        return;
+      }
+
+      toast({
+        title: "Reset code generated",
+        description: `Your reset code is: ${code}. It expires in 15 minutes.`,
+        duration: 10000,
+      });
+
+      setResetStep('verify');
+      setActionLoading(false);
+    } catch (error: any) {
+      console.error('Reset request error:', error);
+      setError('An unexpected error occurred');
+      setActionLoading(false);
+    }
+  };
+
+  /**
+   * Handle password reset with code verification
+   */
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setActionLoading(true);
+    setError('');
+
+    if (!resetCode || !newPassword) {
+      setError('Please enter reset code and new password');
+      setActionLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setActionLoading(false);
+      return;
+    }
+
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Verify code
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, reset_code, reset_code_expires')
+        .eq('email', email)
+        .eq('phone', phone)
+        .single();
+
+      if (profileError || !profile) {
+        setError('Invalid email or phone number');
+        setActionLoading(false);
+        return;
+      }
+
+      if (profile.reset_code !== resetCode) {
+        setError('Invalid reset code');
+        setActionLoading(false);
+        return;
+      }
+
+      if (!profile.reset_code_expires || new Date(profile.reset_code_expires) < new Date()) {
+        setError('Reset code has expired. Please request a new one.');
+        setActionLoading(false);
+        return;
+      }
+
+      // Update password using Supabase admin API
+      const { error: passwordError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (passwordError) {
+        setError('Failed to update password');
+        setActionLoading(false);
+        return;
+      }
+
+      // Clear reset code
+      await supabase
+        .from('profiles')
+        .update({
+          reset_code: null,
+          reset_code_expires: null
+        })
+        .eq('id', profile.id);
+
+      toast({
+        title: "Password reset successful",
+        description: "You can now log in with your new password.",
+      });
+
+      resetForm();
+      setActiveTab('login');
+      setActionLoading(false);
+    } catch (error: any) {
+      console.error('Password reset error:', error);
       setError('An unexpected error occurred');
       setActionLoading(false);
     }
@@ -198,9 +357,10 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="login">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Create Account</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="reset">Reset</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
@@ -268,6 +428,18 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="signup-phone">Phone Number</Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    placeholder="Enter your phone number"
+                    disabled={actionLoading}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
                   <Input
                     id="signup-password"
@@ -303,6 +475,95 @@ const Auth = () => {
                   {actionLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
               </form>
+            </TabsContent>
+            
+            <TabsContent value="reset">
+              {resetStep === 'request' ? (
+                <form onSubmit={handleRequestReset} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="Enter your email"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-phone">Phone Number</Label>
+                    <Input
+                      id="reset-phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      placeholder="Enter your phone number"
+                      disabled={actionLoading}
+                    />
+                  </div>
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button type="submit" className="w-full" disabled={actionLoading}>
+                    {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {actionLoading ? 'Generating Code...' : 'Get Reset Code'}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-code">Reset Code</Label>
+                    <Input
+                      id="reset-code"
+                      type="text"
+                      value={resetCode}
+                      onChange={(e) => setResetCode(e.target.value)}
+                      required
+                      placeholder="Enter 6-digit code"
+                      disabled={actionLoading}
+                      maxLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      placeholder="Enter new password"
+                      disabled={actionLoading}
+                      minLength={6}
+                    />
+                  </div>
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="space-y-2">
+                    <Button type="submit" className="w-full" disabled={actionLoading}>
+                      {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {actionLoading ? 'Resetting Password...' : 'Reset Password'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setResetStep('request')}
+                      disabled={actionLoading}
+                    >
+                      Back to Request Code
+                    </Button>
+                  </div>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
           

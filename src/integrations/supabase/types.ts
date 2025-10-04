@@ -7,10 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -323,6 +323,8 @@ export type Database = {
           id: string
           phone: string | null
           postal_code: string | null
+          reset_code: string | null
+          reset_code_expires: string | null
           role: string
           state: string | null
           updated_at: string
@@ -337,6 +339,8 @@ export type Database = {
           id: string
           phone?: string | null
           postal_code?: string | null
+          reset_code?: string | null
+          reset_code_expires?: string | null
           role?: string
           state?: string | null
           updated_at?: string
@@ -351,6 +355,8 @@ export type Database = {
           id?: string
           phone?: string | null
           postal_code?: string | null
+          reset_code?: string | null
+          reset_code_expires?: string | null
           role?: string
           state?: string | null
           updated_at?: string
@@ -419,11 +425,11 @@ export type Database = {
       }
       create_admin_notification: {
         Args: {
-          notification_type: string
-          notification_title: string
           notification_message: string
-          related_user_id?: string
+          notification_title: string
+          notification_type: string
           related_order_id?: string
+          related_user_id?: string
         }
         Returns: string
       }

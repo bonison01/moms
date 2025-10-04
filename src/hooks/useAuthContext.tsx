@@ -41,7 +41,7 @@ interface AuthContextType {
   
   // Auth methods
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string, phone?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   
   // Utility methods
@@ -222,7 +222,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Sign up with email, password, and optional full name
    */
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, phone?: string) => {
     try {
       console.log('📝 Attempting sign up for:', email);
       
@@ -233,6 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: fullName || '',
+            phone: phone || '',
           },
         },
       });
